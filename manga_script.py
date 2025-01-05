@@ -73,7 +73,6 @@ def organize_image_paths(image_paths, delete_initial_pages):
 
             image_paths.sort(key=lambda x: int(three_digits_regex.search(os.path.basename(x)).group(1)))
 
-    print(f"Organized image paths: {image_paths}")
     return image_paths
 
 def cut_double_page(image_path, manga_width):
@@ -162,8 +161,6 @@ def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
 
     image_paths, double_page_paths = resize_and_save_images(image_paths, target_width_cm, input_folder)
 
-    print(image_paths)
-
     return image_paths, double_page_paths
 
 def extract_file(file, output_folder):
@@ -217,7 +214,6 @@ def validate_printing_order(image_paths, double_page_paths, pages_order):
                 image_paths.insert(0, blank_page_path)
                 break
     
-    print("order of double pages validated")
     return image_paths
 
 def validate_divisibility_by_4(image_paths):
@@ -236,7 +232,7 @@ def validate_divisibility_by_4(image_paths):
         blank_page_path = add_blank_page(image_paths, input_folder='input')
         image_paths.append(blank_page_path)
         blank_pages_added += 1
-        print("page added")
+        print("Adding blank page to the end...")
 
     if len(image_paths) % 4 == 0:
         return image_paths
@@ -247,7 +243,7 @@ def validate_divisibility_by_4(image_paths):
     while len(image_paths) % 4 != 0 and pages_deleted < 4:
         image_paths.pop()
         pages_deleted += 1
-        print("page deleted")       
+        print("Deleting last page...")       
 
     if len(image_paths) % 4 != 0:
         raise ValueError("""
@@ -283,23 +279,27 @@ def trim_images(image_paths):
                     img = img.crop((0, 0, img_width, height))
                     img.save(image_path)
                     print(f"Image {image_path} trimmed.")
-                    
+
         except Exception as e:
             print(f"Error trimming image {image_path}: {e}")    
 
 
 def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths):
 
-    print("validating printing order...")
+    print("Validating printing order...")
     image_paths = validate_printing_order(image_paths, double_page_paths, pages_order)
+    print("Printing order of pages validated.")
     
-    print("validating divisibility by 4...")
+    print("Validating divisibility by 4...")
     image_paths = validate_divisibility_by_4(image_paths)
+    print("Divisibility by 4 validated.")
 
-    print("triming images...")
+    print("Triming images...")
     trim_images(image_paths)
-
-    print(image_paths)
+    print("Images trimmed at minimum height found.")
+    
+    print()
+    print(f"Final order of paths: {image_paths}")
 
     pdf = FPDF(unit="cm", format=paper_size)
 
