@@ -257,7 +257,37 @@ def validate_divisibility_by_4(image_paths):
         """)
 
     return image_paths
-    
+
+def get_minimum_page_height(image_paths):
+    min_height = float('inf')
+    for image_path in image_paths:
+        try:
+            with Image.open(image_path) as img:
+                if img.height < min_height:
+                    min_height = img.height
+        except Exception as e:
+            print(f"Error getting minimum height of image {image_path}: {e}")
+
+    return min_height
+	
+def trim_images(image_paths):
+    height = get_minimum_page_height(image_paths)
+    print(f"height: {height}")
+
+    for image_path in image_paths:
+        try:
+            with Image.open(image_path) as img:
+                img_width, img_height = img.size
+
+                if img_height > height:
+                    img = img.crop((0, 0, img_width, height))
+                    img.save(image_path)
+                    print(f"Image {image_path} trimmed.")
+                    
+        except Exception as e:
+            print(f"Error trimming image {image_path}: {e}")    
+
+
 def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths):
 
     print("validating printing order...")
@@ -265,6 +295,9 @@ def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, 
     
     print("validating divisibility by 4...")
     image_paths = validate_divisibility_by_4(image_paths)
+
+    print("triming images...")
+    trim_images(image_paths)
 
     print(image_paths)
 
