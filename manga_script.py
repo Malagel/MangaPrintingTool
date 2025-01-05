@@ -5,8 +5,6 @@ from fpdf import FPDF
 from PIL import Image
 from PyPDF2 import PdfWriter
 
-# TODO: Add a function to trim images so they dont have extra pixels in the borders. 
-# Just trim the height by the lowest height found in the images.
 
 def cm_to_pixels(cm, dpi):
     return int(cm * dpi / 2.54)
@@ -47,10 +45,10 @@ def get_minimum_page_height(input_folder):
 
 def organize_image_paths(image_paths, delete_initial_pages):
     page_regex = re.compile(r"p(\d{3})")
-    three_digits_regex = re.compile(r"(\d{3})")
+    digits_regex = re.compile(r"(\d{3,4})")
 
     if delete_initial_pages:
-        image_paths = [image for image in image_paths if '000' not in os.path.basename(image)]
+        image_paths = [image for image in image_paths if '000' not in os.path.basename(image) and '0000' not in os.path.basename(image)] 
 
     all_digits = all(os.path.basename(image).isdigit() for image in image_paths)
                             
@@ -62,24 +60,32 @@ def organize_image_paths(image_paths, delete_initial_pages):
         if all_pXXX:
             image_paths.sort(key=lambda x: int(page_regex.search(os.path.basename(x)).group(1)))
         else:
-            print("Warning: Some of the image filenames don't follow the 'pXXX' format or have non-standard digits.")
+            print("\nWARNING: Some of the image filenames don't follow the 'pXXX' format or have non-standard digits.")
             print("The function will now search for files using a simple three-digit number (XXX),")
-            print("and it assumes there is only one 3-digit number in each filename.")
-            print()
-            user_input = input("Do you confirm that the filenames only have ONE SINGLE 3-digit number in their name (y/n): ")
+            print("and it assumes there is only one 3-digit or 4-digit number in each filename.\n")
+
+            user_input = input("Do you confirm that the filenames only have ONE SINGLE 3-digit or 4-digit number in their name? (y/n): ")
 
             if user_input.lower() != 'y':
-                raise ValueError("Please ensure filenames are renamed with a single 3-digit number or the 'pXXX' format.")
+                raise ValueError("Please ensure filenames are renamed with either a 3-digit number, 4-digit, XXX or pXXX format.")
 
-            image_paths.sort(key=lambda x: int(three_digits_regex.search(os.path.basename(x)).group(1)))
-
+            image_paths.sort(key=lambda x: int(digits_regex.search(os.path.basename(x)).group(1)))
+            
     return image_paths
 
-def cut_double_page(image_path, manga_width):
+def cut_double_page(image_path, manga_width, check):
     with Image.open(image_path) as img:
         img_width, img_height = img.size
+        
+        if check and img_width > img_height:
+            middle = img_width // 2
 
-        if img_width > manga_width * 1.2: # 20% margin of error
+            left_page = img.crop((0, 0, middle, img_height))
+            right_page = img.crop((middle, 0, img_width, img_height))
+
+            return left_page, right_page
+        
+        if not check and img_width > manga_width * 1.2: # 20% margin of error
             middle = img_width // 2
 
             left_page = img.crop((0, 0, middle, img_height))
@@ -89,8 +95,31 @@ def cut_double_page(image_path, manga_width):
         else:
             return None, None
 
+def check_if_all_pages_are_double(image_paths):
+    counter = 0
+    for image_path in image_paths:
+        with Image.open(image_path) as img:
+            img_width, img_height = img.size
+            if img_width > img_height:
+                counter += 1
+    
+    if counter > len(image_paths) * 0.70: # 70%
+        print("\nWARNING: More than 70% of the images are in landscape mode (likely double pages).")
+        print("This may result in incorrect splitting if not all images are double pages.")
+        print("The program will attempt to split landscape images into halves.")
+        print("Please verify the final PDF to ensure all pages are correct.\n")
+
+        answer = input("Most pages will be splitted in half. Do you want to continue with this solution? (y/n): ")
+        if answer.lower() == 'y':
+            return True
+    return False
+
 def resize_and_save_images(image_paths, target_width_cm, input_folder):
+
+    check = check_if_all_pages_are_double(image_paths)
+
     manga_width = get_average_page_width(input_folder)
+
     counter = 1 # First page will be 001
     double_page_paths = []
     new_image_paths = []
@@ -99,7 +128,7 @@ def resize_and_save_images(image_paths, target_width_cm, input_folder):
 
         print(f"Processing image number {counter}...", end="\r")
         try:
-            left_page, right_page = cut_double_page(image_path, manga_width) 
+            left_page, right_page = cut_double_page(image_path, manga_width, check) 
 
             if left_page and right_page:
                 left_page_resized = resize_image(left_page, target_width_cm, dpi=300)
@@ -134,7 +163,7 @@ def resize_and_save_images(image_paths, target_width_cm, input_folder):
             print(f"Error processing image {image_path}: {str(e)}")
             continue
     
-    return new_image_paths, double_page_paths
+    return new_image_paths, double_page_paths, check
 
 def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
     cbz_files = [f for f in os.listdir(input_folder) if f.endswith('.cbz')]
@@ -159,9 +188,9 @@ def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
 
     image_paths = organize_image_paths(image_paths, delete_initial_pages)
 
-    image_paths, double_page_paths = resize_and_save_images(image_paths, target_width_cm, input_folder)
+    image_paths, double_page_paths, check = resize_and_save_images(image_paths, target_width_cm, input_folder)
 
-    return image_paths, double_page_paths
+    return image_paths, double_page_paths, check
 
 def extract_file(file, output_folder):
     with zipfile.ZipFile(file, 'r') as zip_ref:
@@ -197,7 +226,7 @@ def add_blank_page(image_paths, input_folder):
         
     return blank_page_path
 
-def validate_printing_order(image_paths, double_page_paths, pages_order):
+def validate_printing_order(image_paths, double_page_paths, pages_order, check):
     print(double_page_paths)
 
     if pages_order == "left" and double_page_paths:
@@ -206,11 +235,12 @@ def validate_printing_order(image_paths, double_page_paths, pages_order):
         for path in double_page_paths:
             index = image_paths.index(path)
 
-            if index == 0 or index == total_pages - 1:
+            if check == False and (index == 0 or index == total_pages - 1):
                 raise ValueError("The first or last page can't be a double page. Please change the order of the pages.")
 
             if index % 2 == 0:
                 blank_page_path = add_blank_page(image_paths, input_folder='input')
+                print("Adding blank page to the beginning...")
                 image_paths.insert(0, blank_page_path)
                 break
     
@@ -283,11 +313,10 @@ def trim_images(image_paths):
         except Exception as e:
             print(f"Error trimming image {image_path}: {e}")    
 
-
-def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths):
+def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths, check):
 
     print("Validating printing order...")
-    image_paths = validate_printing_order(image_paths, double_page_paths, pages_order)
+    image_paths = validate_printing_order(image_paths, double_page_paths, pages_order, check)
     print("Printing order of pages validated.")
     
     print("Validating divisibility by 4...")
@@ -296,8 +325,8 @@ def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, 
 
     print("Triming images...")
     trim_images(image_paths)
-    print("Images trimmed at minimum height found.")
-    
+    print("Images trimmed at minimum height")
+
     print()
     print(f"Final order of paths: {image_paths}")
 
@@ -357,9 +386,9 @@ def main():
     print("--------------------------------------------------------------------------------------------------------")
 
     try:
-        images_paths, double_page_paths = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)    
+        images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)    
 
-        create_pdf(images_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths)
+        create_pdf(images_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths, check)
         
         print()
         print(f"PDF saved in: {output_folder}")
