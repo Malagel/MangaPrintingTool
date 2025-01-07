@@ -229,7 +229,7 @@ def add_blank_page(image_paths, input_folder):
 def validate_printing_order(image_paths, double_page_paths, pages_order, check):
     print(double_page_paths)
 
-    if pages_order == "left" and double_page_paths:
+    if pages_order == "right" and double_page_paths:
         total_pages = len(image_paths)
 
         for path in double_page_paths:
@@ -313,7 +313,59 @@ def trim_images(image_paths):
         except Exception as e:
             print(f"Error trimming image {image_path}: {e}")    
 
-def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths, check):
+def organize_printing_paths(image_paths, pages_order):
+    total_pages = len(image_paths)
+    new_image_paths = []
+
+    # order: 1, 4, 3, 2
+    if pages_order == "right":
+        left_index = 0
+        right_index = total_pages - 1
+
+        while left_index <= right_index:
+            if left_index <= right_index:
+                new_image_paths.append(image_paths[left_index])
+                left_index += 1
+            
+            if right_index >= left_index:
+                new_image_paths.append(image_paths[right_index])
+                right_index -= 1
+            
+            if right_index >= left_index:
+                new_image_paths.append(image_paths[right_index])
+                right_index -= 1
+            
+            if left_index <= right_index:
+                new_image_paths.append(image_paths[left_index])
+                left_index += 1
+
+        return new_image_paths
+
+    # order: 4, 1, 2, 3
+    if pages_order == "left":
+        left_index = 0
+        right_index = total_pages - 1
+
+        while left_index <= right_index:
+            if right_index >= left_index:
+                new_image_paths.append(image_paths[right_index])
+                right_index -= 1
+            
+            if left_index <= right_index:
+                new_image_paths.append(image_paths[left_index])
+                left_index += 1
+            
+            if left_index <= right_index:
+                new_image_paths.append(image_paths[left_index])
+                left_index += 1
+            
+            if right_index >= left_index:
+                new_image_paths.append(image_paths[right_index])
+                right_index -= 1
+
+        return new_image_paths
+
+def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_paths, check):
 
     print("Validating printing order...")
     image_paths = validate_printing_order(image_paths, double_page_paths, pages_order, check)
@@ -328,6 +380,8 @@ def create_pdf(image_paths, output_folder, paper_size, manga_size, pages_order, 
     print("Images trimmed at minimum height")
 
     print()
+
+    image_paths = organize_printing_paths(image_paths, pages_order)
     print(f"Final order of paths: {image_paths}")
 
     pdf = FPDF(unit="cm", format=paper_size)
@@ -352,7 +406,9 @@ def main():
     welcome_message()
     
     while True:
-        pages_order = input("Choose the order of the pages that you will be reading in (left [to right], or right [to left]): ").strip().lower()
+        print("Choose the order of the pages that you will be reading in (left [to right], or right [to left]).")
+        pages_order = input("'left' is the standard order for Western countries, and 'right' is the standard for Eastern countries. ").strip().lower()
+
         if pages_order in ["left", "right"]:
             break
 
@@ -388,7 +444,7 @@ def main():
     try:
         images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)    
 
-        create_pdf(images_paths, output_folder, paper_size, manga_size, pages_order, double_page_paths, check)
+        create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check)
         
         print()
         print(f"PDF saved in: {output_folder}")
