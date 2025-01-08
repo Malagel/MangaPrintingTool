@@ -1,0 +1,8 @@
+altgraph==0.17.4
+chardet==5.2.0
+packaging==24.2
+pillow==11.1.0
+pyinstaller==6.11.1
+pyinstaller-hooks-contrib==2024.11
+reportlab==4.2.5
+setuptools==75.7.0
