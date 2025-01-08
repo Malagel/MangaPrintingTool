@@ -1,4 +1,4 @@
-# Manga-Printing-Tool
+# Manga Printing Tool
 Create a ready to print manga, books or comics automatically from images. It leaves you with a ready-to-print PDF
 
 # What problem does it solve?
