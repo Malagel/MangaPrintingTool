@@ -196,15 +196,6 @@ def extract_file(file, output_folder):
     with zipfile.ZipFile(file, 'r') as zip_ref:
         zip_ref.extractall(output_folder)
 
-def get_paper_dimensions(paper_size):
-    paper_dimensions = {
-        "A4": (210, 297),
-        "Letter": (216, 279),
-        "A5": (148, 210),
-    }
-
-    return paper_dimensions[paper_size]	
-
 def add_blank_page(image_paths, input_folder):
     counter = 0
     while True:
@@ -227,7 +218,7 @@ def add_blank_page(image_paths, input_folder):
     return blank_page_path
 
 def validate_printing_order(image_paths, double_page_paths, pages_order, check):
-    print(double_page_paths)
+    # print(double_page_paths)
 
     if pages_order == "right" and double_page_paths:
         total_pages = len(image_paths)
@@ -240,7 +231,7 @@ def validate_printing_order(image_paths, double_page_paths, pages_order, check):
 
             if index % 2 == 0:
                 blank_page_path = add_blank_page(image_paths, input_folder='input')
-                print("Adding blank page to the beginning...")
+                # print("Adding blank page to the beginning...")
                 image_paths.insert(0, blank_page_path)
                 break
     
@@ -262,7 +253,7 @@ def validate_divisibility_by_4(image_paths):
         blank_page_path = add_blank_page(image_paths, input_folder='input')
         image_paths.append(blank_page_path)
         blank_pages_added += 1
-        print("Adding blank page to the end...")
+        # print("Adding blank page to the end...")
 
     if len(image_paths) % 4 == 0:
         return image_paths
@@ -273,7 +264,7 @@ def validate_divisibility_by_4(image_paths):
     while len(image_paths) % 4 != 0 and pages_deleted < 4:
         image_paths.pop()
         pages_deleted += 1
-        print("Deleting last page...")       
+        # print("Deleting last page...")       
 
     if len(image_paths) % 4 != 0:
         raise ValueError("""
@@ -298,7 +289,7 @@ def get_minimum_page_height(image_paths):
 	
 def trim_images(image_paths):
     height = get_minimum_page_height(image_paths)
-    print(f"height: {height}")
+    # print(f"height: {height}")
 
     for image_path in image_paths:
         try:
@@ -308,7 +299,7 @@ def trim_images(image_paths):
                 if img_height > height:
                     img = img.crop((0, 0, img_width, height))
                     img.save(image_path)
-                    print(f"Image {image_path} trimmed.")
+                    # print(f"Image {image_path} trimmed.")
 
         except Exception as e:
             print(f"Error trimming image {image_path}: {e}")    
@@ -412,17 +403,15 @@ def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_
 
     print("Validating printing order...")
     image_paths = validate_printing_order(image_paths, double_page_paths, pages_order, check)
-    print("Printing order of pages validated.")
     
     print("Validating divisibility by 4...")
     image_paths = validate_divisibility_by_4(image_paths)
-    print("Divisibility by 4 validated.")
 
     print("Triming images...")
     trim_images(image_paths)
 
     image_paths = organize_printing_paths(image_paths, pages_order)
-    print(f"Final order of paths: {image_paths}")
+    # print(f"Final order of paths: {image_paths}")
 
     draw_pdf(image_paths, output_folder, paper_size)
 
