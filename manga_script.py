@@ -465,8 +465,8 @@ def main():
             break
         elif manga_size == "full":
             size = {
-                "A4": 13,
-                "Letter": 8,
+                "A4": 14,
+                "Letter": 13,
                 "A5": 10,
             }
             manga_size = size[paper_size]
