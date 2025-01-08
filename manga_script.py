@@ -1,9 +1,9 @@
 import os
 import re
 import zipfile
-from fpdf import FPDF
 from PIL import Image
-from PyPDF2 import PdfWriter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4, A5, letter, landscape
 
 
 def cm_to_pixels(cm, dpi):
@@ -365,6 +365,50 @@ def organize_printing_paths(image_paths, pages_order):
 
         return new_image_paths
 
+def pixels_to_points(pixels, dpi=300):
+    return (pixels / dpi) * 72 
+
+def draw_pdf(image_paths, output_folder, paper_size):
+
+    paper_size_mapping = {
+    "A4": A4,
+    "A5": A5,
+    "LETTER": letter
+    }
+
+    selected_size = paper_size_mapping[paper_size]
+
+    output_pdf = os.path.join(output_folder, "output.pdf")
+    pdf = canvas.Canvas(output_pdf, pagesize=landscape(selected_size))
+
+    page_width, page_height = selected_size
+
+    for i, image_path in enumerate(image_paths):
+        print(f"Drawing page {i + 1} of {len(image_paths)}", end="\r")
+
+        with Image.open(image_path) as img:
+            img_width, img_height = img.size
+
+            img_width = pixels_to_points(img_width)
+            img_height = pixels_to_points(img_height)
+
+            center_line_x = page_height / 2
+
+            if i % 2 == 0:
+                x_pos = center_line_x - img_width
+            else:
+                x_pos = center_line_x
+            
+            y_pos = (page_width - img_height) / 2
+
+            pdf.drawImage(image_path, x_pos, y_pos, img_width, img_height)
+            
+            if i % 2 == 1:
+                pdf.showPage()
+
+    pdf.save()
+
+
 def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_paths, check):
 
     print("Validating printing order...")
@@ -377,16 +421,13 @@ def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_
 
     print("Triming images...")
     trim_images(image_paths)
-    print("Images trimmed at minimum height")
-
-    print()
 
     image_paths = organize_printing_paths(image_paths, pages_order)
     print(f"Final order of paths: {image_paths}")
 
-    pdf = FPDF(unit="cm", format=paper_size)
+    draw_pdf(image_paths, output_folder, paper_size)
 
-    print("Creating PDF...")
+    print("PDF created successfully.")
 
 def welcome_message():
     print("--------------------------------------------------------------------------------------------------------")
@@ -413,8 +454,8 @@ def main():
             break
 
     while True:
-        paper_size = input("Please choose paper size to print (A4, Letter, or A5): ").strip()
-        if paper_size in ["A4", "Letter", "A5"]:
+        paper_size = input("Please choose paper size to print (A4, Letter, or A5): ").strip().upper()
+        if paper_size in ["A4", "LETTER", "A5"]:
             break    
 
     while True:
@@ -424,8 +465,8 @@ def main():
             break
         elif manga_size == "full":
             size = {
-                "A4": 14,
-                "Letter": 13,
+                "A4": 13,
+                "Letter": 8,
                 "A5": 10,
             }
             manga_size = size[paper_size]
