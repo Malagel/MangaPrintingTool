@@ -415,8 +415,6 @@ def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_
 
     draw_pdf(image_paths, output_folder, paper_size)
 
-    print("PDF created successfully.")
-
 def welcome_message():
     print("--------------------------------------------------------------------------------------------------------")
     print("                                Welcome to the Manga/Book/Comic Printing Tool")
@@ -427,6 +425,13 @@ def welcome_message():
     print("--------------------------------------------------------------------------------------------------------")
     print("         IMPORTANT: the files in the 'input' folder WILL be modified, so make sure to have a backup.")
     print("--------------------------------------------------------------------------------------------------------")
+
+def goodbye_message():
+    print("Your PDF should be saved in the 'output' folder. For printing remember to do the following:")
+    print("1. Make sure you are using the paper size you selected.")
+    print("2. Use the landscape orientation.")
+    print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
+    print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
 def main():
     input_folder = "input"
@@ -475,8 +480,9 @@ def main():
 
         create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check)
         
-        print()
-        print(f"PDF saved in: {output_folder}")
+        print(f"\nPDF saved in: {output_folder}\n")
+
+        goodbye_message()
     
     except Exception as e:
         print(f"Error: {e}")
