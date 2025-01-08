@@ -483,6 +483,7 @@ def main():
         print(f"\nPDF saved in: {output_folder}\n")
 
         goodbye_message()
+        input("\nPress Enter to exit...")
     
     except Exception as e:
         print(f"Error: {e}")
