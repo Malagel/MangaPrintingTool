@@ -408,7 +408,6 @@ def draw_pdf(image_paths, output_folder, paper_size):
 
     pdf.save()
 
-
 def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_paths, check):
 
     print("Validating printing order...")
@@ -467,7 +466,7 @@ def main():
             size = {
                 "A4": 14,
                 "Letter": 13,
-                "A5": 10,
+                "A5": 9,
             }
             manga_size = size[paper_size]
             break
