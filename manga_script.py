@@ -459,7 +459,7 @@ def main():
 
     while True:
         manga_size = input("Please choose the width of the manga/book in centimeters (usually it's 12cm) or type 'full': ").strip()
-        if manga_size.isnumeric() and int(manga_size) > 0 and int(manga_size) < 30: 
+        if manga_size.isnumeric() and int(manga_size) > 0 and int(manga_size) < 20: 
             manga_size = int(manga_size)
             break
         elif manga_size == "full":
