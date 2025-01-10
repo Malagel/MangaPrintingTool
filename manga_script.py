@@ -20,12 +20,17 @@ def resize_image(img, target_width_cm, dpi=300):
     return img
 
 def get_average_page_width(input_folder):
-    image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.png'))]
+    image_files = [
+        os.path.join(root, file)
+        for root, _, files in os.walk(input_folder)
+        for file in files
+        if file.endswith(('.jpg', '.png'))
+    ]
     total_width = 0
     total_pages = 0
 
     for image in image_files:
-        with Image.open(os.path.join(input_folder, image)) as img:
+        with Image.open(image) as img:
             total_width += img.width
             total_pages += 1
 
@@ -65,7 +70,7 @@ def organize_image_paths(image_paths, delete_initial_pages):
             print("and it assumes there is only one 3-digit or 4-digit number in each filename.\n")
 
             user_input = input("Do you confirm that the filenames only have ONE SINGLE 3-digit or 4-digit number in their name? (y/n): ")
-
+            print("\n")
             if user_input.lower() != 'y':
                 raise ValueError("Please ensure filenames are renamed with either a 3-digit number, 4-digit, XXX or pXXX format.")
 
@@ -178,7 +183,13 @@ def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
         zip_file = os.path.join(input_folder, zip_files[0])
         extract_file(zip_file, input_folder)
     
-    image_paths = [os.path.join(input_folder, f) for f in os.listdir(input_folder) if f.endswith(('.jpg', '.png'))]
+    image_paths = [
+        os.path.join(root, file)
+        for root, _, files in os.walk(input_folder)
+        for file in files
+        if file.endswith(('.jpg', '.png'))
+    ]
+    
     if not image_paths:
         raise ValueError("No image files found in the input folder. Make sure the files are not inside other folders.")
     
@@ -433,6 +444,58 @@ def goodbye_message():
     print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
     print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
+def create_cover(paper_size, output_folder, images_paths):
+
+    paper_size_mapping = {
+    "A4": A4,
+    "A5": A5,
+    "LETTER": letter
+    }
+    paper_size = paper_size_mapping[paper_size]
+
+    output_pdf = os.path.join(output_folder, "cover.pdf")
+    pdf = canvas.Canvas(output_pdf, pagesize=landscape(paper_size))
+
+    page_height, page_width = paper_size
+
+    target_height_px = get_minimum_page_height(images_paths)
+
+    cover_folder = 'cover'
+    cover_paths = [os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f.endswith(('.jpg', '.png'))]
+
+    if not cover_paths:
+        print("No cover image found. Skipping cover creation.")
+        return
+
+    if len(cover_paths) == 1:
+
+        with Image.open(cover_paths[0]) as img:
+            img_width, img_height = img.size
+            aspect_ratio = img_height / img_width
+
+            target_width_px = int(target_height_px / aspect_ratio)
+            img = img.resize((target_width_px, target_height_px))
+
+            temp_image_path = os.path.join(output_folder, "temp_cover.jpg")
+            img.save(temp_image_path, "JPEG")
+
+            img_width_pt = pixels_to_points(img.width)
+            img_height_pt = pixels_to_points(img.height)
+
+            x_pos = (page_width - img_width_pt) / 2
+            y_pos = (page_height - img_height_pt) / 2
+
+            pdf.drawImage(temp_image_path, x_pos, y_pos, img_width_pt, img_height_pt)
+            os.remove(temp_image_path)
+
+            pdf.save()
+
+        return
+
+    elif len(cover_paths) > 1:
+        print("Only one cover image is supported for this function.")
+        return 
+
 def main():
     input_folder = "input"
     output_folder = "output"
@@ -476,7 +539,9 @@ def main():
     print("--------------------------------------------------------------------------------------------------------")
 
     try:
-        images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)    
+        images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)
+
+        create_cover(paper_size, output_folder, images_paths)    
 
         create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check)
         
