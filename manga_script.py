@@ -466,7 +466,9 @@ def create_cover(paper_size, output_folder, images_paths):
     if not cover_paths:
         print("No cover image found. Skipping cover creation.")
         return
-
+    if len(cover_paths) == 2 or len(cover_paths) > 3:
+        print("Invalid number of cover images. It must be 1 or 3. Skipping cover creation.")
+        return
     if len(cover_paths) == 1:
 
         with Image.open(cover_paths[0]) as img:
@@ -491,10 +493,47 @@ def create_cover(paper_size, output_folder, images_paths):
             pdf.save()
 
         return
+    elif len(cover_paths) == 3:
+        all_digits = all(os.path.basename(cover_path).isdigit() for cover_path in cover_paths)
+        
+        if not all_digits:
+            print("Cover images must be numbered. Skipping cover creation.")
+            return
 
-    elif len(cover_paths) > 1:
-        print("Only one cover image is supported for this function.")
-        return 
+        cover_paths.sort(key=lambda x: int(os.path.basename(x).split('.')[0]))
+        
+        resized_images = []
+        for cover_path in cover_paths:
+            with Image.open(cover_path) as img:
+                img_width, img_height = img.size
+                aspect_ratio = img_height / img_width
+
+                target_width_px = int(target_height_px / aspect_ratio)
+                img = img.resize((target_width_px, target_height_px))
+
+                resized_images.append(img) 
+        
+        total_width = sum(img.width for img in resized_images)
+        combined_image = Image.new("RGB", (total_width, target_height_px))
+
+        x_offset = 0
+        for img in resized_images:
+            combined_image.paste(img, (x_offset, 0))
+            x_offset += img.width
+        
+        combined_image_path = os.path.join(output_folder, "temp_combined_cover.jpg")
+        combined_image.save(combined_image_path, "JPEG")
+
+        combined_img_width_pt = pixels_to_points(combined_image.width)
+        combined_img_height_pt = pixels_to_points(combined_image.height)
+
+        x_pos = (page_width - combined_img_width_pt) / 2
+        y_pos = (page_height - combined_img_height_pt) / 2
+
+        pdf.drawImage(combined_image_path, x_pos, y_pos, combined_img_width_pt, combined_img_height_pt)
+        os.remove(combined_image_path)
+
+        pdf.save()
 
 def main():
     input_folder = "input"
