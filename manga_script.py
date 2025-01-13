@@ -504,7 +504,7 @@ def create_cover(paper_size, output_folder, pages_order):
             target_height_px = get_minimum_page_height(image_paths)
         else:
             while True:
-                target_height_px = input("Please enter the width of the cover in pixels for resizing: ")
+                target_height_px = input("Please enter the height of the cover in pixels for resizing: ")
                 if target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
                     break
@@ -515,7 +515,7 @@ def create_cover(paper_size, output_folder, pages_order):
                     target_height_px = int(target_height_px)
                     break
     while True:
-        personalized_creation = input("Do you want to create a personalized cover? (useful if you dont have back cover or a spine) (y/n): ").strip().lower()
+        personalized_creation = input("Do you want to create a personalized cover? (if you dont have back cover or a spine) (y/n): ").strip().lower()
         if personalized_creation in ["y", "n"]:
             break
     
