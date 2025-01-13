@@ -427,6 +427,7 @@ def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_
     draw_pdf(image_paths, output_folder, paper_size)
 
 def welcome_message():
+    print()
     print("--------------------------------------------------------------------------------------------------------")
     print("                                Welcome to the Manga/Book/Comic Printing Tool")
     print("--------------------------------------------------------------------------------------------------------")
@@ -436,6 +437,7 @@ def welcome_message():
     print("--------------------------------------------------------------------------------------------------------")
     print("         IMPORTANT: the files in the 'input' folder WILL be modified, so make sure to have a backup.")
     print("--------------------------------------------------------------------------------------------------------")
+    print()
 
 def goodbye_message():
     print("Your PDF should be saved in the 'output' folder. For printing remember to do the following:")
@@ -444,8 +446,45 @@ def goodbye_message():
     print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
     print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
-def create_cover(paper_size, output_folder, images_paths):
+def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, total_pages):
+    print("\nPersonalized cover creation:\n")
+    while True:
+        volume_number = input("Please enter the volume number: ").strip()
+        if volume_number.isnumeric() and int(volume_number) > 0:
+            volume_number = int(volume_number)
+            break
+    while True:
+        total_pages = input("Please enter the total number of pages, or an approximate number: ").strip()
+        if total_pages.isnumeric() and int(total_pages) > 0:
+            total_pages = int(total_pages)
+            break
 
+def welcome_message_cover():
+    print()
+    print("--------------------------------------------------------------------------------------------------------")
+    print("                                Welcome to the Cover Creation Tool")
+    print("--------------------------------------------------------------------------------------------------------")
+    print("            This tool will help you create a personalized cover for your manga or book.")
+    print("    If you have a cover page, just put them inside the 'cover' folder so it can be resized correctly.")
+    print("   You can put either 1 or 3 images, using 1 will resize it, if not they will be put side by side.")
+    print("                If you don't have a cover page, you will be prompted to create one.")
+    print("--------------------------------------------------------------------------------------------------------")
+    print()
+
+def detect_images_in_folder(folder_path):
+    image_paths = [
+        os.path.join(root, file)
+        for root, _, files in os.walk(folder_path)
+        for file in files
+        if file.endswith(('.jpg', '.png'))
+    ]
+    
+    if not image_paths:
+        return None
+
+    return image_paths
+
+def create_cover(paper_size, output_folder, pages_order):
     paper_size_mapping = {
     "A4": A4,
     "A5": A5,
@@ -453,24 +492,50 @@ def create_cover(paper_size, output_folder, images_paths):
     }
     paper_size = paper_size_mapping[paper_size]
 
-    output_pdf = os.path.join(output_folder, "cover.pdf")
-    pdf = canvas.Canvas(output_pdf, pagesize=landscape(paper_size))
-
     page_height, page_width = paper_size
 
-    target_height_px = get_minimum_page_height(images_paths)
+    image_paths = detect_images_in_folder(folder_path="input")
+    if image_paths: 
+        while True:
+            check = input("The program detected images on the input folder, do you want to use them to assign the size of the cover?")
+            if check in ["y", "n"]:
+                break
+        if check == "y":
+            target_height_px = get_minimum_page_height(image_paths)
+        else:
+            while True:
+                target_height_px = input("Please enter the width of the cover in pixels for resizing: ")
+                if target_height_px.isnumeric():
+                    target_height_px = int(target_height_px)
+                    break
+    else:
+        while True:
+                target_height_px = input("Please enter the height of the cover in pixels for resizing: ")
+                if target_height_px.isnumeric():
+                    target_height_px = int(target_height_px)
+                    break
+    while True:
+        personalized_creation = input("Do you want to create a personalized cover? (useful if you dont have back cover or a spine) (y/n): ").strip().lower()
+        if personalized_creation in ["y", "n"]:
+            break
+    
+    if personalized_creation == "y":
+        personalized_cover_creation(page_height, page_width, target_height_px, paper_size)
+
+    output_pdf = os.path.join(output_folder, "cover.pdf")
+    pdf = canvas.Canvas(output_pdf, pagesize=landscape(paper_size))
 
     cover_folder = 'cover'
     cover_paths = [os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f.endswith(('.jpg', '.png'))]
 
     if not cover_paths:
-        print("No cover image found. Skipping cover creation.")
+        print("No cover image found. Exiting cover creation.")
         return
     if len(cover_paths) == 2 or len(cover_paths) > 3:
-        print("Invalid number of cover images. It must be 1 or 3. Skipping cover creation.")
+        print("Invalid number of cover images. It must be 1 or 3. Exiting cover creation.")
         return
     if len(cover_paths) == 1:
-
+        print("Creating cover page with a single image...")
         with Image.open(cover_paths[0]) as img:
             img_width, img_height = img.size
             aspect_ratio = img_height / img_width
@@ -491,13 +556,14 @@ def create_cover(paper_size, output_folder, images_paths):
             os.remove(temp_image_path)
 
             pdf.save()
-
         return
+    
     elif len(cover_paths) == 3:
+        print("Creating cover with three images...")
         all_digits = all(os.path.basename(cover_path).isdigit() for cover_path in cover_paths)
         
         if not all_digits:
-            print("Cover images must be numbered. Skipping cover creation.")
+            print("Cover images must be numbered. They will be put side by side from left to right (1, 2 then 3).")
             return
 
         cover_paths.sort(key=lambda x: int(os.path.basename(x).split('.')[0]))
@@ -539,54 +605,59 @@ def main():
     input_folder = "input"
     output_folder = "output"
 
-    welcome_message()
+    while True:
+        choose_creation = input("Do you want to create a cover or a manga/book/comic? (cover/book): ").strip().lower()
+        if choose_creation in ["cover", "book"]:
+            break
     
+    if choose_creation == "book":
+        welcome_message()
+    else:
+        welcome_message_cover()
+            
     while True:
         print("Choose the order of the pages that you will be reading in (left [to right], or right [to left]).")
         pages_order = input("'left' is the standard order for Western countries, and 'right' is the standard for Eastern countries. ").strip().lower()
 
         if pages_order in ["left", "right"]:
             break
-
     while True:
         paper_size = input("Please choose paper size to print (A4, Letter, or A5): ").strip().upper()
         if paper_size in ["A4", "LETTER", "A5"]:
             break    
 
-    while True:
-        manga_size = input("Please choose the width of the manga/book in centimeters (usually it's 12cm) or type 'full': ").strip()
-        if manga_size.isnumeric() and int(manga_size) > 0 and int(manga_size) < 20: 
-            manga_size = int(manga_size)
+    if choose_creation == "book":
+        while True:     
+            delete_initial_pages = input("Delete ALL '000' pages? Usually the 000 pages are covers, artwork, fanmade, etc. (y/n): ").strip().lower()
+            if delete_initial_pages == "y": 
+                delete_initial_pages = True
+                break
+            elif delete_initial_pages == "n":
+                delete_initial_pages = False
+                break
+        while True:
+            manga_size = input("Please choose the width of the manga/book in centimeters (usually it's 12cm) or type 'full': ").strip()
+            if manga_size.isnumeric() and int(manga_size) > 0 and int(manga_size) < 20: 
+                manga_size = int(manga_size)
+                break
+            elif manga_size == "full":
+                size = {
+                    "A4": 14,
+                    "Letter": 13,
+                    "A5": 9,
+                }
+                manga_size = size[paper_size]
             break
-        elif manga_size == "full":
-            size = {
-                "A4": 14,
-                "Letter": 13,
-                "A5": 9,
-            }
-            manga_size = size[paper_size]
-            break
-    
-    while True:     
-        delete_initial_pages = input("Delete ALL '000' pages? Usually the 000 pages are covers, artwork, fanmade, etc. (y/n): ").strip().lower()
-        if delete_initial_pages == "y": 
-            delete_initial_pages = True
-            break
-        elif delete_initial_pages == "n":
-            delete_initial_pages = False
-            break
-    print("--------------------------------------------------------------------------------------------------------")
-
     try:
-        images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)
+        if choose_creation == "book":
+            images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)
+            create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check)
 
-        create_cover(paper_size, output_folder, images_paths)    
+            print(f"\nPDF saved in: {output_folder}\n")
+            goodbye_message()
+        else:
+            create_cover(paper_size, output_folder, pages_order)    
 
-        create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check)
-        
-        print(f"\nPDF saved in: {output_folder}\n")
-
-        goodbye_message()
         input("\nPress Enter to exit...")
     
     except Exception as e:
