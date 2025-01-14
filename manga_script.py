@@ -448,7 +448,11 @@ def goodbye_message():
 
 def generate_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, paper_size):
     page_height, page_width = paper_size
-    
+
+    # Case where no cover is provided and no colors are provided
+    if not cover_path and not back_color and not spine_color:
+        
+
 
 def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order):
     print("\nPersonalized cover creation:\n")
