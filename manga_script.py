@@ -1,7 +1,8 @@
 import os
 import re
 import zipfile
-from PIL import Image
+import random
+from PIL import Image, ImageColor, ImageDraw, ImageFont
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, A5, letter, landscape
 
@@ -15,7 +16,7 @@ def resize_image(img, target_width_cm, dpi=300):
     aspect_ratio = img_height / img_width
     target_height_px = int(target_width_px * aspect_ratio)
 
-    img = img.resize((target_width_px, target_height_px))
+    img = img.resize((target_width_px, target_height_px, Image.Resampling.LANCZOS))
 
     return img
 
@@ -217,13 +218,9 @@ def add_blank_page(image_paths, input_folder):
 
     with Image.open(image_paths[1]) as img:
         img_width, img_height = img.size
-        mode = img.mode
+        mode = "RGB"
 
-        if mode == "RGB":
-            blank_page = Image.new(mode, (img_width, img_height), color=(255, 255, 255))
-        else:
-            blank_page = Image.new(mode, (img_width, img_height), color=255)
-        
+        blank_page = Image.new(mode, (img_width, img_height), color=(255, 255, 255))
         blank_page.save(blank_page_path)
         
     return blank_page_path
@@ -370,6 +367,9 @@ def organize_printing_paths(image_paths, pages_order):
 def pixels_to_points(pixels, dpi=300):
     return (pixels / dpi) * 72 
 
+def hex_to_rgb(hex_color):
+    return ImageColor.getrgb(hex_color)
+
 def draw_pdf(image_paths, output_folder, paper_size):
 
     paper_size_mapping = {
@@ -446,16 +446,111 @@ def goodbye_message():
     print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
     print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
-def generate_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, paper_size):
+def generate_just_cover(cover_path, target_height_px, target_width_px, spine_color, back_color, title_path, name, author):
+    if not cover_path:
+        print("No 'cover.png' file found, creating one...")
+        # Create cover image
+        if not back_color:
+            back_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            print("Using random color as cover color...")
+        else:
+            back_color = hex_to_rgb(back_color)
+            print("Using back color as cover color...")
+        cover_page = Image.new("RGBA", (target_width_px, target_height_px), color=back_color)
+
+        # Add title
+        if not title_path:
+            print("No 'title.png' file found, writing the name on the cover...")
+
+            # Title
+
+            title = name
+            font_size = target_height_px // 12
+
+            try:
+                font = ImageFont.truetype("assets/Arial.ttf", font_size)
+            except IOError:
+                print("Arial font not found. Using default font.")
+                font = ImageFont.load_default()
+            
+            draw = ImageDraw.Draw(cover_page)
+
+            bbox = draw.textbbox((0, 0), title, font=font) 
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+
+            x_pos = (target_width_px - text_width) // 2
+            y_pos = int(target_height_px * 0.05)
+
+            draw.text((x_pos, y_pos), title, font=font, fill=(255, 255, 255))
+
+        else:
+            with Image.open(title_path) as title_img:
+                title_img = title_img.convert("RGBA")
+
+                new_height = target_height_px // 3
+                aspect_ratio = title_img.width / title_img.height
+                new_width = int(new_height * aspect_ratio)
+                
+                title_img = title_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                
+                x_pos = (target_width_px - new_width) // 2
+                y_pos = int(target_height_px * 0.05)
+                
+                cover_page.paste(title_img, (x_pos, y_pos), title_img)
+        
+        title = author
+        font_size = target_height_px // 25
+        try:
+            font = ImageFont.truetype("assets/Arial.ttf", font_size)
+        except IOError:
+            print("Arial font not found. Using default font.")
+            font = ImageFont.load_default()
+        
+        draw = ImageDraw.Draw(cover_page)
+
+        bbox = draw.textbbox((0, 0), title, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        x_pos = (target_width_px - text_width) // 2
+        y_pos = int(target_height_px * 0.85)
+
+        draw.text((x_pos, y_pos), title, font=font, fill=(255, 255, 255))
+
+    else:
+        with Image.open(cover_path) as cover_img:
+            aspect_ratio = cover_img.width / cover_img.height 
+            target_width_px = int(target_height_px * aspect_ratio)
+
+            cover_img = cover_img.resize((target_width_px, target_height_px), Image.Resampling.LANCZOS)
+            cover_page = cover_img
+    
+    cover_page.save("cover/cover.png", dpi=(300, 300))
+
+    if not back_color:
+        back_color = cover_page.getpixel((cover_page.width // 2, cover_page.height // 2))
+    if not spine_color:
+        spine_color = cover_page.getpixel((cover_page.width - 5, cover_page.height // 2))
+    
+    return spine_color, back_color
+
+
+def generate_full_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, target_width_px, paper_size):
     page_height, page_width = paper_size
 
-    # Case where no cover is provided and no colors are provided
-    if not cover_path and not back_color and not spine_color:
-        
+    spine_color, back_color = generate_just_cover(cover_path, 
+                                                target_height_px, 
+                                                target_width_px, 
+                                                spine_color, 
+                                                back_color,
+                                                title_path,
+                                                name,
+                                                author)
 
 
 def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order):
-    print("\nPersonalized cover creation:\n")
+    print("                                   PERSONALIZED COVER CREATION:\n")
     if image_paths:
         while True:
             check = input("The program detected images in the input folder, do you want to use them to assign the number of pages? (y/n)").strip().lower()
@@ -505,15 +600,28 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
     character_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "character.png"), None)
     title_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "title.png"), None)
 
-    generate_cover(total_pages, 
+    while True:
+        if not cover_path:
+            target_width_px = input("Since there is no cover.png, please enter the width of the cover in pixels: ").strip()
+            if target_width_px.isnumeric() and int(target_width_px) > 0:
+                target_width_px = int(target_width_px)
+                break
+        else:
+            target_width_px = 0
+            break
+    
+
+    generate_full_cover(total_pages, 
                     volume_number, 
-                    name, author, 
+                    name, 
+                    author, 
                     back_color, 
                     spine_color, 
                     cover_path, 
                     character_path, 
                     title_path, 
-                    target_height_px, 
+                    target_height_px,
+                    target_width_px, 
                     paper_size)
 
 def welcome_message_cover():
@@ -560,18 +668,18 @@ def create_cover(paper_size, output_folder, pages_order):
             target_height_px = get_minimum_page_height(image_paths)
         else:
             while True:
-                target_height_px = input("Please enter the height of the cover in pixels for resizing: ")
+                target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
                 if target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
                     break
     else:
         while True:
-                target_height_px = input("Please enter the height of the cover in pixels for resizing: ")
+                target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
                 if target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
                     break
     while True:
-        personalized_creation = input("Do you want to create a personalized cover? (if you dont have back cover or a spine) (y/n): ").strip().lower()
+        personalized_creation = input("Do you want to create a personalized cover? (if you don't have back/front covers or spine) (y/n): ").strip().lower()
         if personalized_creation in ["y", "n"]:
             break
     
@@ -580,9 +688,11 @@ def create_cover(paper_size, output_folder, pages_order):
         print("IMPORTANT: if you are creating a full-cover, even though it's optional, it's recommended to have:")
         print("--------------------------------------------------------------------------------------------------------")
         print("1. A single cover page (must be named 'cover.png').")
-        print("2. A transparent character png (must be named 'character.png').")
-        print("3. Atransparent manga or book name/title PNG (must be named 'name.png').")
+        print("2. A transparent character (must be named 'character.png').")
+        print("3. A transparent manga or book name/title PNG (must be named 'name.png').")
         print("--------------------------------------------------------------------------------------------------------")
+
+        input("\nPress Enter to continue...\n")
 
         personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order)
         return
