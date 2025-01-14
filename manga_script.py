@@ -446,18 +446,71 @@ def goodbye_message():
     print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
     print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
-def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, total_pages):
+def generate_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, paper_size):
+    page_height, page_width = paper_size
+    
+
+def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order):
     print("\nPersonalized cover creation:\n")
+    if image_paths:
+        while True:
+            check = input("The program detected images in the input folder, do you want to use them to assign the number of pages? (y/n)").strip().lower()
+            if check in ["y", "n"]:
+                break
+        if check == "y":
+            total_pages = len(image_paths)
+        else: 
+            total_pages = input("Please enter the total number of pages, or an approximate number: ").strip()
+            if total_pages.isnumeric() and int(total_pages) > 0:
+                total_pages = int(total_pages)
+    else: 
+        total_pages = input("Please enter the total number of pages, or an approximate number: ").strip()
+        if total_pages.isnumeric() and int(total_pages) > 0:
+            total_pages = int(total_pages)
+
     while True:
         volume_number = input("Please enter the volume number: ").strip()
         if volume_number.isnumeric() and int(volume_number) > 0:
             volume_number = int(volume_number)
             break
     while True:
-        total_pages = input("Please enter the total number of pages, or an approximate number: ").strip()
-        if total_pages.isnumeric() and int(total_pages) > 0:
-            total_pages = int(total_pages)
+        name = input("Please enter the name of the manga or book for displaying: ")
+        if name:
             break
+    while True:
+        author = input("Please enter the author of the manga or book for displaying: ")
+        if author:
+            break
+    while True:	
+        back_color = input("Please enter the hex code of the back-cover color (eg. #000000), or 'default' to let the program choose: ").strip()
+        if back_color == "default":
+            back_color = None
+            break
+        if re.match(r'^#([A-Fa-f0-9]{6})$', back_color):
+            break
+    while True:
+        spine_color = input("Please enter the hex code of the spine color (eg. #000000), or 'default' to let the program choose: ").strip()
+        if spine_color == "default":
+            spine_color = None
+            break
+        if re.match(r'^#([A-Fa-f0-9]{6})$', spine_color):
+            break
+    
+    cover_folder = "cover"
+    cover_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "cover.png"), None)
+    character_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "character.png"), None)
+    title_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "title.png"), None)
+
+    generate_cover(total_pages, 
+                    volume_number, 
+                    name, author, 
+                    back_color, 
+                    spine_color, 
+                    cover_path, 
+                    character_path, 
+                    title_path, 
+                    target_height_px, 
+                    paper_size)
 
 def welcome_message_cover():
     print()
@@ -469,7 +522,6 @@ def welcome_message_cover():
     print("   You can put either 1 or 3 images, using 1 will resize it, if not they will be put side by side.")
     print("                If you don't have a cover page, you will be prompted to create one.")
     print("--------------------------------------------------------------------------------------------------------")
-    print()
 
 def detect_images_in_folder(folder_path):
     image_paths = [
@@ -497,7 +549,7 @@ def create_cover(paper_size, output_folder, pages_order):
     image_paths = detect_images_in_folder(folder_path="input")
     if image_paths: 
         while True:
-            check = input("The program detected images on the input folder, do you want to use them to assign the size of the cover?")
+            check = input("The program detected images in the input folder, do you want to use them to assign the size of the cover?")
             if check in ["y", "n"]:
                 break
         if check == "y":
@@ -520,7 +572,18 @@ def create_cover(paper_size, output_folder, pages_order):
             break
     
     if personalized_creation == "y":
-        personalized_cover_creation(page_height, page_width, target_height_px, paper_size)
+        print("--------------------------------------------------------------------------------------------------------")
+        print("IMPORTANT: if you are creating a full-cover, even though it's optional, it's recommended to have:")
+        print("--------------------------------------------------------------------------------------------------------")
+        print("1. A single cover page (must be named 'cover.png').")
+        print("2. A transparent character png (must be named 'character.png').")
+        print("3. Atransparent manga or book name/title PNG (must be named 'name.png').")
+        print("--------------------------------------------------------------------------------------------------------")
+
+        personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order)
+        return
+
+    # Create the cover from one or three images
 
     output_pdf = os.path.join(output_folder, "cover.pdf")
     pdf = canvas.Canvas(output_pdf, pagesize=landscape(paper_size))
