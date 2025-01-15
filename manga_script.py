@@ -548,69 +548,87 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
         target_width_px = cm_to_pixels(spine_width_cm, 300)
 
         spine_page = Image.new("RGBA", (target_width_px, target_height_px), color=spine_color)
+        spine_page.save("cover/sized_spine_for_editing_yourself.png", dpi=(300, 300))
 
         # Add book/manga name
 
         title = str(name)
-        font_size = int(target_width_px * 0.5) 
+        font_size = int(target_width_px * 0.9) 
 
         try:
             font = ImageFont.truetype("assets/custom_font.ttf", font_size)
         except IOError:
             print("'custom_font.ttf' not found. Using default font.")
             font = ImageFont.load_default()
-        
+
+        letters_that_clip = ["g", "p", "j"]
+        if any(letter in title for letter in letters_that_clip):
+            padding = 8
+            print("Prefer capitalized letters for the title.")
+        else:
+            padding = 0
+
         draw = ImageDraw.Draw(spine_page)
 
         bbox = draw.textbbox((0, 0), title, font=font)
         text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
+        text_height = bbox[3] - bbox[1] 
 
-        x_pos = (target_width_px - text_height) // 2  
-        y_pos = int(target_height_px * 0.03)
-        print(f"title y_pos: {y_pos}")
+        text_layer = Image.new("RGBA", (text_width, text_height + padding), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+
+
+        y_offset = ((text_height // 2) - padding) * -1 
+        text_draw.text((0, y_offset), title, font=font, fill=font_color)
+        text_layer.save("cover/non_rotated_text.png", dpi=(300, 300))
+
+        rotated_text = text_layer.rotate(-90, expand=True)
+        rotated_text.save("cover/rotated_text.png", dpi=(300, 300))
+
+        rotated_width, rotated_height = rotated_text.size
+        x_pos = (target_width_px - rotated_width) // 2 
+        y_pos = int(target_height_px * 0.01)  
+        
+        spine_page.paste(rotated_text, (x_pos, y_pos), rotated_text)
 
         title_width_used = int(text_width + y_pos) 
-
-        text_layer = Image.new("RGBA", (text_height, text_width), (0, 0, 0, 0))  # Swap dimensions for rotation
-        text_draw = ImageDraw.Draw(text_layer)
-        text_draw.text((0, 0), title, font=font, fill=font_color)
-
-        rotated_text = text_layer.rotate(90, expand=True)
 
         spine_page.paste(rotated_text, (x_pos, y_pos), rotated_text)
 
         # Add volume number
-        print("adding volume number")
-        volume = str(volume_number)
 
-        font_size = int(target_width_px * 0.5) 
+        if volume_number != 0:
+            print("adding volume number")
+            volume = str(volume_number)
 
-        try:
-            font = ImageFont.truetype("assets/custom_font.ttf", font_size)
-        except IOError:
-            print("'custom_font.ttf' not found. Using default font.")
-            font = ImageFont.load_default()
+            font_size = int(target_width_px * 0.9) 
+
+            try:
+                font = ImageFont.truetype("assets/custom_font.ttf", font_size)
+            except IOError:
+                print("'custom_font.ttf' not found. Using default font.")
+                font = ImageFont.load_default()
+            
+            draw = ImageDraw.Draw(spine_page)
+
+            bbox = draw.textbbox((0, 0), volume, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+
+            spacing = int(target_height_px * 0.03)
+
+            x_pos = (target_width_px - text_width) // 2
+            y_pos = int(title_width_used + spacing)
+
+
+            draw.text((x_pos, y_pos), volume, font=font, fill=(255, 255, 255))
         
-        draw = ImageDraw.Draw(spine_page)
-
-        bbox = draw.textbbox((0, 0), volume, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-
-        spacing = int(target_height_px * 0.03)
-
-        x_pos = (target_width_px - text_width) // 2
-        y_pos = int(title_width_used + spacing)
-
-        title_volume_width_used = title_width_used + text_height + spacing
-
-        draw.text((x_pos, y_pos), volume, font=font, fill=(255, 255, 255))
-        print("adding character_path")
         if character_path:
+            print("adding character_path")
             with Image.open(character_path) as character_image:
                 character_image = character_image.convert("RGBA")
-                new_width = int(target_width_px - 2)
+
+                new_width = int(target_width_px)
                 aspect_ratio = character_image.height / character_image.width
                 new_height = int(new_width * aspect_ratio)
                 
@@ -620,11 +638,11 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
                 print(f"Character image size: {character_image.size}")
                 
                 x_pos = (target_width_px - new_width) // 2
-                y_pos = int(title_volume_width_used + spacing)
+                y_pos = int(target_height_px * 0.82)
 
                 print(f"x_pos: {x_pos}, y_pos: {y_pos}")
 
-                character_image.paste(spine_page, (x_pos, y_pos), character_image)
+                spine_page.paste(character_image, (x_pos, y_pos), character_image)
                 print("image added now savin lesgoo")
     
     else:
@@ -681,7 +699,7 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
     while True:
         paper_thickness = input("Please enter the paper thickness in mm you will be using, or enter 'default' for an average paper thickness: ").strip()
         if paper_thickness == "default":
-            paper_thickness = 0.1
+            paper_thickness = 0.05
             break
         if paper_thickness.isnumeric() and float(paper_thickness) > 0:
             paper_thickness = float(paper_thickness)
