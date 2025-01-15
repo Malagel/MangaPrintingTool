@@ -446,31 +446,32 @@ def goodbye_message():
     print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
     print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
-def generate_just_cover(cover_path, target_height_px, target_width_px, spine_color, back_color, title_path, name, author):
+def generate_just_cover(cover_path, target_height_px, target_width_px, spine_color, back_color, title_path, name, author, front_color, font_color):
     if not cover_path:
+        font_color = hex_to_rgb(font_color)
         print("No 'cover.png' file found, creating one...")
         # Create cover image
-        if not back_color:
-            back_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        if not front_color:
+            front_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             print("Using random color as cover color...")
         else:
-            back_color = hex_to_rgb(back_color)
-            print("Using back color as cover color...")
-        cover_page = Image.new("RGBA", (target_width_px, target_height_px), color=back_color)
+            front_color = hex_to_rgb(back_color)
+            print("Using front color as cover color...")
+        cover_page = Image.new("RGBA", (target_width_px, target_height_px), color=front_color)
 
         # Add title
         if not title_path:
             print("No 'title.png' file found, writing the name on the cover...")
-
+            
             # Title
 
             title = name
             font_size = target_height_px // 12
 
             try:
-                font = ImageFont.truetype("assets/Arial.ttf", font_size)
+                font = ImageFont.truetype("assets/custom_font.ttf", font_size)
             except IOError:
-                print("Arial font not found. Using default font.")
+                print("'custom_font.ttf' font not found. Using default font.")
                 font = ImageFont.load_default()
             
             draw = ImageDraw.Draw(cover_page)
@@ -482,7 +483,7 @@ def generate_just_cover(cover_path, target_height_px, target_width_px, spine_col
             x_pos = (target_width_px - text_width) // 2
             y_pos = int(target_height_px * 0.05)
 
-            draw.text((x_pos, y_pos), title, font=font, fill=(255, 255, 255))
+            draw.text((x_pos, y_pos), title, font=font, fill=font_color)
 
         else:
             with Image.open(title_path) as title_img:
@@ -502,9 +503,9 @@ def generate_just_cover(cover_path, target_height_px, target_width_px, spine_col
         title = author
         font_size = target_height_px // 25
         try:
-            font = ImageFont.truetype("assets/Arial.ttf", font_size)
+            font = ImageFont.truetype("assets/custom_font.ttf", font_size)
         except IOError:
-            print("Arial font not found. Using default font.")
+            print("'custom_font.ttf' not found. Using default font.")
             font = ImageFont.load_default()
         
         draw = ImageDraw.Draw(cover_page)
@@ -516,7 +517,7 @@ def generate_just_cover(cover_path, target_height_px, target_width_px, spine_col
         x_pos = (target_width_px - text_width) // 2
         y_pos = int(target_height_px * 0.85)
 
-        draw.text((x_pos, y_pos), title, font=font, fill=(255, 255, 255))
+        draw.text((x_pos, y_pos), title, font=font, fill=font_color)
 
     else:
         with Image.open(cover_path) as cover_img:
@@ -535,22 +536,132 @@ def generate_just_cover(cover_path, target_height_px, target_width_px, spine_col
     
     return spine_color, back_color
 
+def generate_just_spine(target_height_px, total_pages, volume_number, name, character_path, paper_thickness, spine_color, font_color):
+    cover_folder = "cover"
+    spine_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "spine.png"), None)
 
-def generate_full_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, target_width_px, paper_size):
+    if not spine_path:
+        font_color = hex_to_rgb(font_color)
+        print("No 'spine.png' file found, creating one...")
+
+        spine_width_cm = total_pages * paper_thickness / 10 
+        target_width_px = cm_to_pixels(spine_width_cm, 300)
+
+        spine_page = Image.new("RGBA", (target_width_px, target_height_px), color=spine_color)
+
+        # Add book/manga name
+
+        title = str(name)
+        font_size = int(target_width_px * 0.5) 
+
+        try:
+            font = ImageFont.truetype("assets/custom_font.ttf", font_size)
+        except IOError:
+            print("'custom_font.ttf' not found. Using default font.")
+            font = ImageFont.load_default()
+        
+        draw = ImageDraw.Draw(spine_page)
+
+        bbox = draw.textbbox((0, 0), title, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        x_pos = (target_width_px - text_height) // 2  
+        y_pos = int(target_height_px * 0.03)
+        print(f"title y_pos: {y_pos}")
+
+        title_width_used = int(text_width + y_pos) 
+
+        text_layer = Image.new("RGBA", (text_height, text_width), (0, 0, 0, 0))  # Swap dimensions for rotation
+        text_draw = ImageDraw.Draw(text_layer)
+        text_draw.text((0, 0), title, font=font, fill=font_color)
+
+        rotated_text = text_layer.rotate(90, expand=True)
+
+        spine_page.paste(rotated_text, (x_pos, y_pos), rotated_text)
+
+        # Add volume number
+        print("adding volume number")
+        volume = str(volume_number)
+
+        font_size = int(target_width_px * 0.5) 
+
+        try:
+            font = ImageFont.truetype("assets/custom_font.ttf", font_size)
+        except IOError:
+            print("'custom_font.ttf' not found. Using default font.")
+            font = ImageFont.load_default()
+        
+        draw = ImageDraw.Draw(spine_page)
+
+        bbox = draw.textbbox((0, 0), volume, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        spacing = int(target_height_px * 0.03)
+
+        x_pos = (target_width_px - text_width) // 2
+        y_pos = int(title_width_used + spacing)
+
+        title_volume_width_used = title_width_used + text_height + spacing
+
+        draw.text((x_pos, y_pos), volume, font=font, fill=(255, 255, 255))
+        print("adding character_path")
+        if character_path:
+            with Image.open(character_path) as character_image:
+                character_image = character_image.convert("RGBA")
+                new_width = int(target_width_px - 2)
+                aspect_ratio = character_image.height / character_image.width
+                new_height = int(new_width * aspect_ratio)
+                
+                character_image = character_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+                print(f"Spine page size: {spine_page.size}")
+                print(f"Character image size: {character_image.size}")
+                
+                x_pos = (target_width_px - new_width) // 2
+                y_pos = int(title_volume_width_used + spacing)
+
+                print(f"x_pos: {x_pos}, y_pos: {y_pos}")
+
+                character_image.paste(spine_page, (x_pos, y_pos), character_image)
+                print("image added now savin lesgoo")
+    
+    else:
+        with Image.open(spine_path) as spine_img:
+            aspect_ratio = spine_img.width / spine_img.height
+            target_width_px = int(target_height_px * aspect_ratio)
+
+            spine_img = spine_img.resize((target_width_px, target_height_px), Image.Resampling.LANCZOS)
+            spine_page = spine_img
+
+    spine_page.save("cover/spine.png", dpi=(300, 300))
+    return
+
+def generate_full_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, target_width_px, paper_size, front_color, pages_order, paper_thickness, font_color):
     page_height, page_width = paper_size
 
     spine_color, back_color = generate_just_cover(cover_path, 
-                                                target_height_px, 
-                                                target_width_px, 
-                                                spine_color, 
-                                                back_color,
-                                                title_path,
-                                                name,
-                                                author)
-
+                                                  target_height_px, 
+                                                  target_width_px, 
+                                                  spine_color, 
+                                                  back_color,
+                                                  title_path,
+                                                  name,
+                                                  author,
+                                                  front_color,
+                                                  font_color)
+    
+    generate_just_spine(target_height_px, 
+                        total_pages, 
+                        volume_number, 
+                        name, 
+                        character_path,
+                        paper_thickness,
+                        spine_color,
+                        font_color)
 
 def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order):
-    print("                                   PERSONALIZED COVER CREATION:\n")
     if image_paths:
         while True:
             check = input("The program detected images in the input folder, do you want to use them to assign the number of pages? (y/n)").strip().lower()
@@ -568,8 +679,16 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
             total_pages = int(total_pages)
 
     while True:
-        volume_number = input("Please enter the volume number: ").strip()
-        if volume_number.isnumeric() and int(volume_number) > 0:
+        paper_thickness = input("Please enter the paper thickness in mm you will be using, or enter 'default' for an average paper thickness: ").strip()
+        if paper_thickness == "default":
+            paper_thickness = 0.1
+            break
+        if paper_thickness.isnumeric() and float(paper_thickness) > 0:
+            paper_thickness = float(paper_thickness)
+            break
+    while True:
+        volume_number = input("Please enter the volume number of the manga, if it's a book use '0': ").strip()
+        if volume_number.isnumeric():
             volume_number = int(volume_number)
             break
     while True:
@@ -579,6 +698,13 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
     while True:
         author = input("Please enter the author of the manga or book for displaying: ")
         if author:
+            break
+    while True:	
+        front_color = input("Please enter the hex code of the front-cover color (eg. #000000), or 'default' to let the program choose (will be omitted if you already have a cover): ").strip()
+        if front_color == "default":
+            front_color = None
+            break
+        if re.match(r'^#([A-Fa-f0-9]{6})$', front_color):
             break
     while True:	
         back_color = input("Please enter the hex code of the back-cover color (eg. #000000), or 'default' to let the program choose: ").strip()
@@ -594,6 +720,14 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
             break
         if re.match(r'^#([A-Fa-f0-9]{6})$', spine_color):
             break
+    while True:
+        font_color = input("Please enter the hex code of the font color (eg. #000000), or 'default' to use white: ").strip()
+        if font_color == "default":
+            font_color = "#FFFFFF"
+            break
+        if re.match(r'^#([A-Fa-f0-9]{6})$', font_color):
+            break
+    
     
     cover_folder = "cover"
     cover_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "cover.png"), None)
@@ -622,18 +756,23 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
                     title_path, 
                     target_height_px,
                     target_width_px, 
-                    paper_size)
+                    paper_size,
+                    front_color,
+                    pages_order,
+                    paper_thickness,
+                    font_color)
 
-def welcome_message_cover():
+def welcome_message_cover():    
     print()
     print("--------------------------------------------------------------------------------------------------------")
     print("                                Welcome to the Cover Creation Tool")
     print("--------------------------------------------------------------------------------------------------------")
     print("            This tool will help you create a personalized cover for your manga or book.")
     print("    If you have a cover page, just put them inside the 'cover' folder so it can be resized correctly.")
-    print("   You can put either 1 or 3 images, using 1 will resize it, if not they will be put side by side.")
+    print("   You can put either 1 or 3 images, using 1 will resize it, if not they will be merged and resized.")
     print("                If you don't have a cover page, you will be prompted to create one.")
     print("--------------------------------------------------------------------------------------------------------")
+    print()
 
 def detect_images_in_folder(folder_path):
     image_paths = [
@@ -679,7 +818,7 @@ def create_cover(paper_size, output_folder, pages_order):
                     target_height_px = int(target_height_px)
                     break
     while True:
-        personalized_creation = input("Do you want to create a personalized cover? (if you don't have back/front covers or spine) (y/n): ").strip().lower()
+        personalized_creation = input("Do you want to create a personalized cover? (if you don't have back/front/spine covers) (y/n): ").strip().lower()
         if personalized_creation in ["y", "n"]:
             break
     
@@ -690,6 +829,10 @@ def create_cover(paper_size, output_folder, pages_order):
         print("1. A single cover page (must be named 'cover.png').")
         print("2. A transparent character (must be named 'character.png').")
         print("3. A transparent manga or book name/title PNG (must be named 'name.png').")
+        print("4. You can have 2 of either front/back/spine covers (or none at all), it will generate the remaining one.")
+        print("5. You have to name the parts 'back.png', 'cover.png' or 'spine.png'.")
+        print("6. Everything above must be in the 'cover' folder.")
+        print("7. You can use a custom font by changing it's name to 'custom_font.ttf' and putting it in the 'assets' folder.")
         print("--------------------------------------------------------------------------------------------------------")
 
         input("\nPress Enter to continue...\n")
