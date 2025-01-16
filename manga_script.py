@@ -16,7 +16,7 @@ def resize_image(img, target_width_cm, dpi=300):
     aspect_ratio = img_height / img_width
     target_height_px = int(target_width_px * aspect_ratio)
 
-    img = img.resize((target_width_px, target_height_px, Image.Resampling.LANCZOS))
+    img = img.resize((target_width_px, target_height_px), Image.Resampling.LANCZOS)
 
     return img
 
@@ -36,6 +36,28 @@ def get_average_page_width(input_folder):
             total_pages += 1
 
     return total_width / total_pages
+
+def get_average_page_width_for_list(image_files): # im tired ok?
+    total_width = 0
+    total_pages = 0
+
+    for image in image_files:
+        with Image.open(image) as img:
+            total_width += img.width
+            total_pages += 1
+
+    return total_width / total_pages
+
+def get_average_page_height(image_files):
+    total_height = 0
+    total_pages = 0
+
+    for image in image_files:
+        with Image.open(image) as img:
+            total_height += img.height
+            total_pages += 1
+
+    return total_height / total_pages
 
 def get_minimum_page_height(input_folder):
     image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.png'))]
@@ -446,6 +468,9 @@ def goodbye_message():
     print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
     print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
+def darken_color(color, factor):
+    return tuple(max(0, int(c * factor)) for c in color)
+
 def generate_just_cover(cover_path, target_height_px, target_width_px, spine_color, back_color, title_path, name, author, front_color, font_color):
     if not cover_path:
         font_color = hex_to_rgb(font_color)
@@ -531,17 +556,22 @@ def generate_just_cover(cover_path, target_height_px, target_width_px, spine_col
 
     if not back_color:
         back_color = cover_page.getpixel((cover_page.width // 2, cover_page.height // 2))
+    else:
+        back_color = hex_to_rgb(back_color)
     if not spine_color:
         spine_color = cover_page.getpixel((cover_page.width - 5, cover_page.height // 2))
+    else:
+        spine_color = hex_to_rgb(spine_color)
     
     return spine_color, back_color
 
-def generate_just_spine(target_height_px, total_pages, volume_number, name, character_path, paper_thickness, spine_color, font_color):
+def generate_just_spine(target_height_px, total_pages, volume_number, name, character_path, paper_thickness, spine_color, font_color, author):
     cover_folder = "cover"
     spine_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "spine.png"), None)
 
     if not spine_path:
         font_color = hex_to_rgb(font_color)
+        spacing = int(target_height_px * 0.03)
         print("No 'spine.png' file found, creating one...")
 
         spine_width_cm = total_pages * paper_thickness / 10 
@@ -577,7 +607,6 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
         text_layer = Image.new("RGBA", (text_width, text_height + padding), (0, 0, 0, 0))
         text_draw = ImageDraw.Draw(text_layer)
 
-
         y_offset = ((text_height // 2) - padding) * -1 
         text_draw.text((0, y_offset), title, font=font, fill=font_color)
         text_layer.save("cover/non_rotated_text.png", dpi=(300, 300))
@@ -591,14 +620,27 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
         
         spine_page.paste(rotated_text, (x_pos, y_pos), rotated_text)
 
-        title_width_used = int(text_width + y_pos) 
+        title_height_used = int(text_width + y_pos) 
 
         spine_page.paste(rotated_text, (x_pos, y_pos), rotated_text)
 
-        # Add volume number
+        # Add spine darker color, number and character image
 
         if volume_number != 0:
-            print("adding volume number")
+            print("Adding color to the spine and volumenumber")
+            
+            
+            # Add color to spine
+
+            darker_spine_color = darken_color(spine_color, 0.8)
+            
+            color_layer_height = int(target_height_px - title_height_used - spacing // 2)
+            color_layer = Image.new("RGBA", (target_width_px, color_layer_height), color=darker_spine_color)
+
+            spine_page.paste(color_layer, (0, target_height_px - color_layer_height), color_layer)
+
+            # Add volume number
+
             volume = str(volume_number)
 
             font_size = int(target_width_px * 0.9) 
@@ -615,35 +657,81 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
 
-            spacing = int(target_height_px * 0.03)
-
             x_pos = (target_width_px - text_width) // 2
-            y_pos = int(title_width_used + spacing)
+            y_pos = int(title_height_used + spacing)
 
+            title_and_number_height = y_pos + text_height + spacing
 
             draw.text((x_pos, y_pos), volume, font=font, fill=(255, 255, 255))
         
-        if character_path:
-            print("adding character_path")
-            with Image.open(character_path) as character_image:
-                character_image = character_image.convert("RGBA")
+            if character_path:
+                print("Adding character image")
+                with Image.open(character_path) as character_image:
+                    character_image = character_image.convert("RGBA")
 
-                new_width = int(target_width_px)
-                aspect_ratio = character_image.height / character_image.width
-                new_height = int(new_width * aspect_ratio)
-                
-                character_image = character_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    new_width = int(target_width_px)
+                    aspect_ratio = character_image.height / character_image.width
+                    new_height = int(new_width * aspect_ratio)
+                    
+                    character_image = character_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-                print(f"Spine page size: {spine_page.size}")
-                print(f"Character image size: {character_image.size}")
-                
-                x_pos = (target_width_px - new_width) // 2
-                y_pos = int(target_height_px * 0.82)
+                    print(f"Spine page size: {spine_page.size}")
+                    print(f"Character image size: {character_image.size}")
+                    
+                    x_pos = (target_width_px - new_width) // 2
+                    y_pos = int(title_and_number_height + spacing)
 
-                print(f"x_pos: {x_pos}, y_pos: {y_pos}")
+                    print(f"x_pos: {x_pos}, y_pos: {y_pos}")
 
-                spine_page.paste(character_image, (x_pos, y_pos), character_image)
-                print("image added now savin lesgoo")
+                    title_number_character_height = y_pos + new_height + spacing
+                    spine_page.paste(character_image, (x_pos, y_pos), character_image)
+    
+        
+        # Add book/manga author
+
+        title = str(author)
+        font_size = int(target_width_px * 0.6) 
+        
+        try:
+            font = ImageFont.truetype("assets/custom_font.ttf", font_size)
+        except IOError:
+            print("'custom_font.ttf' not found. Using default font.")
+            font = ImageFont.load_default()
+
+        letters_that_clip = ["g", "p", "j"]
+        if any(letter in title for letter in letters_that_clip):
+            padding = 8
+            print("Prefer capitalized letters for the author.")
+        else:
+            padding = 0
+
+        draw = ImageDraw.Draw(spine_page)
+
+        bbox = draw.textbbox((0, 0), title, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1] 
+
+        text_layer = Image.new("RGBA", (text_width, text_height + padding), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+
+        y_offset = ((text_height // 2) - padding) * -1 
+        text_draw.text((0, y_offset), title, font=font, fill=font_color)
+        text_layer.save("cover/non_author_text.png", dpi=(300, 300))
+
+        rotated_text = text_layer.rotate(-90, expand=True)
+        rotated_text.save("cover/author_text.png", dpi=(300, 300))
+
+        rotated_width, rotated_height = rotated_text.size
+        x_pos = (target_width_px - rotated_width) // 2 
+        
+        if volume_number != 0 and character_path:
+            y_pos = int(title_number_character_height + spacing)
+        elif volume_number != 0:
+            y_pos = int(title_and_number_height + spacing)
+        elif volume_number == 0:
+            y_pos = int(title_height_used + spacing)
+        
+        spine_page.paste(rotated_text, (x_pos, y_pos), rotated_text)
     
     else:
         with Image.open(spine_path) as spine_img:
@@ -677,12 +765,13 @@ def generate_full_cover(total_pages, volume_number, name, author, back_color, sp
                         character_path,
                         paper_thickness,
                         spine_color,
-                        font_color)
+                        font_color,
+                        author)
 
-def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order):
+def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order, target_width_px):
     if image_paths:
         while True:
-            check = input("The program detected images in the input folder, do you want to use them to assign the number of pages? (y/n)").strip().lower()
+            check = input("The program detected images in the input folder, do you want to use them to assign the number of pages? (y/n): ").strip().lower()
             if check in ["y", "n"]:
                 break
         if check == "y":
@@ -710,7 +799,7 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
             volume_number = int(volume_number)
             break
     while True:
-        name = input("Please enter the name of the manga or book for displaying: ")
+        name = input("Please enter the name of the manga or book for displaying (looks better with all caps): ")
         if name:
             break
     while True:
@@ -753,15 +842,13 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
     title_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "title.png"), None)
 
     while True:
-        if not cover_path:
-            target_width_px = input("Since there is no cover.png, please enter the width of the cover in pixels: ").strip()
+        if not cover_path and not image_paths:
+            target_width_px = input("Since there is no cover.png, please enter the desired width of the cover in pixels: ").strip()
             if target_width_px.isnumeric() and int(target_width_px) > 0:
                 target_width_px = int(target_width_px)
                 break
         else:
-            target_width_px = 0
             break
-    
 
     generate_full_cover(total_pages, 
                     volume_number, 
@@ -818,22 +905,25 @@ def create_cover(paper_size, output_folder, pages_order):
     image_paths = detect_images_in_folder(folder_path="input")
     if image_paths: 
         while True:
-            check = input("The program detected images in the input folder, do you want to use them to assign the size of the cover?")
+            check = input("The program detected images in the input folder, do you want to use them to assign the size (height and width) of the cover? (y/n): ")
             if check in ["y", "n"]:
                 break
         if check == "y":
-            target_height_px = get_minimum_page_height(image_paths)
+            target_height_px = int(get_average_page_height(image_paths))
+            target_width_px = int(get_average_page_width_for_list(image_paths))
         else:
             while True:
                 target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
                 if target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
+                    target_width_px = 0
                     break
     else:
         while True:
                 target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
                 if target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
+                    target_width_px = 0
                     break
     while True:
         personalized_creation = input("Do you want to create a personalized cover? (if you don't have back/front/spine covers) (y/n): ").strip().lower()
@@ -855,7 +945,7 @@ def create_cover(paper_size, output_folder, pages_order):
 
         input("\nPress Enter to continue...\n")
 
-        personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order)
+        personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order, target_width_px)
         return
 
     # Create the cover from one or three images
@@ -954,11 +1044,14 @@ def main():
         welcome_message_cover()
             
     while True:
-        print("Choose the order of the pages that you will be reading in (left [to right], or right [to left]).")
-        pages_order = input("'left' is the standard order for Western countries, and 'right' is the standard for Eastern countries. ").strip().lower()
+        pages_order = input("Choose the order in which you will be reading ('left to right' or 'right to left'): ").strip().lower()
 
-        if pages_order in ["left", "right"]:
+        if pages_order == "left to right":
+            pages_order = "left"
             break
+        if pages_order == "right to left":
+            pages_order = "right"
+            break   
     while True:
         paper_size = input("Please choose paper size to print (A4, Letter, or A5): ").strip().upper()
         if paper_size in ["A4", "LETTER", "A5"]:
