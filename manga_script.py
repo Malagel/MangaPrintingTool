@@ -584,7 +584,7 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
             print("'custom_font.ttf' not found. Using default font.")
             font = ImageFont.load_default()
 
-        letters_that_clip = ["g", "p", "j"]
+        letters_that_clip = ["g", "p", "j"] # I really don't know how this works. But it does.
         if any(letter in title for letter in letters_that_clip):
             padding = 8
             print("Prefer capitalized letters for the title.")
@@ -600,7 +600,8 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
         text_layer = Image.new("RGBA", (text_width, text_height + padding), (0, 0, 0, 0))
         text_draw = ImageDraw.Draw(text_layer)
 
-        y_offset = ((text_height // 2) - padding) * -1 
+        y_offset = ((text_height // 2) - padding) * -1 # I don't know why this works either. And for me it's just so pretty.
+
         text_draw.text((0, y_offset), title, font=font, fill=font_color)
         text_layer.save("cover/non_rotated_text.png", dpi=(300, 300))
 
@@ -620,8 +621,7 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
         # Add spine darker color, number and character image
 
         if volume_number != 0:
-            print("Adding color to the spine and volumenumber")
-            
+            print("Adding color to the spine and volume number")
             
             # Add color to spine
 
@@ -760,16 +760,21 @@ def generate_full_cover(total_pages, volume_number, name, author, back_color, sp
                         spine_color,
                         font_color,
                         author)
+    
+    generate_just_cover(name,
+                        author,
+                        back_color,
+                        title_path,
+                        )
 
 def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order, target_width_px):
     if image_paths:
         while True:
-            check = input("The program detected images in the input folder, do you want to use them to assign the number of pages? (y/n): ").strip().lower()
+            total_pages = len(image_paths)
+            check = input(f"The program detected {total_pages} pages in the input folder, do you want to use them to assign the number of pages? (y/n): ").strip().lower()
             if check in ["y", "n"]:
                 break
-        if check == "y":
-            total_pages = len(image_paths)
-        else: 
+        if check != "y":
             total_pages = input("Please enter the total number of pages, or an approximate number: ").strip()
             if total_pages.isnumeric() and int(total_pages) > 0:
                 total_pages = int(total_pages)
@@ -779,7 +784,7 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
             total_pages = int(total_pages)
 
     while True:
-        paper_thickness = input("Please enter the paper thickness in mm you will be using, or enter 'default' for an average paper thickness: ").strip()
+        paper_thickness = input("Please enter the paper thickness in mm you will be using, or enter 'default' for an average paper thickness of 0.05: ").strip()
         if paper_thickness == "default":
             paper_thickness = 0.05
             break
@@ -833,15 +838,6 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
     cover_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "cover.png"), None)
     character_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "character.png"), None)
     title_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "title.png"), None)
-
-    while True:
-        if not cover_path and not image_paths:
-            target_width_px = input("Since there is no cover.png, please enter the desired width of the cover in pixels: ").strip()
-            if target_width_px.isnumeric() and int(target_width_px) > 0:
-                target_width_px = int(target_width_px)
-                break
-        else:
-            break
 
     generate_full_cover(total_pages, 
                     volume_number, 
@@ -909,14 +905,22 @@ def create_cover(paper_size, output_folder, pages_order):
                 target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
                 if target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
-                    target_width_px = 0
+                    break
+            while True:
+                target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ")
+                if target_width_px.isnumeric():
+                    target_width_px = int(target_width_px)
                     break
     else:
         while True:
                 target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
                 if target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
-                    target_width_px = 0
+                    break
+        while True:
+                target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ")
+                if target_width_px.isnumeric():
+                    target_width_px = int(target_width_px)
                     break
     while True:
         personalized_creation = input("Do you want to create a personalized cover? (if you don't have back/front/spine covers) (y/n): ").strip().lower()
@@ -956,10 +960,14 @@ def create_cover(paper_size, output_folder, pages_order):
         print("Invalid number of cover images. It must be 1 or 3. Exiting cover creation.")
         return
     if len(cover_paths) == 1:
-        print("Creating cover page with a single image...")
+        print("Resizing cover page with a single image...")
         with Image.open(cover_paths[0]) as img:
             img_width, img_height = img.size
             aspect_ratio = img_height / img_width
+            if aspect_ratio > 1:
+                print("The image needs to be in landscape orientation, also it needs to be all cover/spine/back pages together.")
+                print("If you wish to merge the images, put the 3 images on the 'cover' folder and run again.")
+                return
 
             target_width_px = int(target_height_px / aspect_ratio)
             img = img.resize((target_width_px, target_height_px))
@@ -980,7 +988,7 @@ def create_cover(paper_size, output_folder, pages_order):
         return
     
     elif len(cover_paths) == 3:
-        print("Creating cover with three images...")
+        print("Resizing cover with three images...")
         all_digits = all(os.path.basename(cover_path).isdigit() for cover_path in cover_paths)
         
         if not all_digits:
