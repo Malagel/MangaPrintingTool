@@ -20,24 +20,17 @@ def resize_image(img, target_width_cm, dpi=300):
 
     return img
 
-def get_average_page_width(input_folder):
-    image_files = [
+def get_average_page_width(image_files, is_path):
+
+    # is_path must be True or False. If True, image_files is a path. If False, image_files is a list of images
+    if is_path == True:
+        image_files = [
         os.path.join(root, file)
-        for root, _, files in os.walk(input_folder)
+        for root, _, files in os.walk(image_files)
         for file in files
         if file.endswith(('.jpg', '.png'))
     ]
-    total_width = 0
-    total_pages = 0
 
-    for image in image_files:
-        with Image.open(image) as img:
-            total_width += img.width
-            total_pages += 1
-
-    return total_width / total_pages
-
-def get_average_page_width_for_list(image_files): # im tired ok?
     total_width = 0
     total_pages = 0
 
@@ -146,7 +139,7 @@ def resize_and_save_images(image_paths, target_width_cm, input_folder):
 
     check = check_if_all_pages_are_double(image_paths)
 
-    manga_width = get_average_page_width(input_folder)
+    manga_width = get_average_page_width(input_folder, True)
 
     counter = 1 # First page will be 001
     double_page_paths = []
@@ -910,7 +903,7 @@ def create_cover(paper_size, output_folder, pages_order):
                 break
         if check == "y":
             target_height_px = int(get_average_page_height(image_paths))
-            target_width_px = int(get_average_page_width_for_list(image_paths))
+            target_width_px = int(get_average_page_width(image_paths, False))
         else:
             while True:
                 target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
