@@ -560,6 +560,7 @@ def generate_just_cover(cover_path, target_height_px, target_width_px, spine_col
 def generate_just_spine(target_height_px, total_pages, volume_number, name, character_path, paper_thickness, spine_color, font_color, author):
     cover_folder = "cover"
     spine_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "spine.png"), None)
+    editorial_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "editorial.png"), None)
 
     if not spine_path:
         font_color = hex_to_rgb(font_color)
@@ -570,7 +571,6 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
         target_width_px = cm_to_pixels(spine_width_cm, 300)
 
         spine_page = Image.new("RGBA", (target_width_px, target_height_px), color=spine_color)
-        spine_page.save("cover/sized_spine_for_editing_yourself.png", dpi=(300, 300))
 
         # Add book/manga name
 
@@ -713,6 +713,24 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
             y_pos = int(title_height_used + spacing)
         
         spine_page.paste(rotated_text, (x_pos, y_pos), rotated_text)
+
+        # Add editorial PNG
+
+        if editorial_path:
+            with Image.open(editorial_path) as editorial_img:
+                editorial_img = editorial_img.convert("RGBA")
+
+                padding = 20
+                new_width = int(target_width_px - padding)
+                aspect_ratio = editorial_img.height / editorial_img.width
+                new_height = int(new_width * aspect_ratio)
+                
+                editorial_img = editorial_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+                x_pos = (target_width_px - new_width) // 2
+                y_pos = int(target_height_px - new_height - padding // 2)
+
+                spine_page.paste(editorial_img, (x_pos, y_pos), editorial_img)
     
     else:
         with Image.open(spine_path) as spine_img:
@@ -888,6 +906,37 @@ def generate_just_back_cover(cover_path, name, author, back_color, title_path, d
     
     back_page.save("cover/back.png", dpi=(300, 300))
 
+def create_cover_pdf(page_height, page_width, pages_order):
+    output_path = "output/cover.pdf"
+    pdf = canvas.Canvas(output_path, pagesize=(page_width, page_height))
+
+    images = ["cover/cover.png", "cover/spine.png", "cover/back.png"]
+    if pages_order == "left":
+        images.reverse()
+
+    total_width_pt = 0
+    image_dimensions = []
+    for image in images:
+        with Image.open(image) as img:
+            img_width, img_height = img.size
+            img_width_pt = pixels_to_points(img_width)
+            img_height_pt = pixels_to_points(img_height)
+            image_dimensions.append((img_width_pt, img_height_pt))
+            total_width_pt += img_width_pt
+
+    x_start = (page_width - total_width_pt) // 2
+    y_start = (page_height - image_dimensions[0][1]) // 2  
+
+    current_x = x_start
+    for (image, (img_width_pt, img_height_pt)) in (zip(images, image_dimensions)):
+
+        pdf.drawImage(image, current_x, y_start, width=img_width_pt, height=img_height_pt)
+
+        current_x += img_width_pt
+
+    pdf.save()
+    print(f"Cover PDF created at {output_path}.")
+
 def generate_full_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, target_width_px, paper_size, front_color, pages_order, paper_thickness, font_color, description):
     page_height, page_width = paper_size
 
@@ -919,6 +968,8 @@ def generate_full_cover(total_pages, volume_number, name, author, back_color, sp
                             title_path,
                             description,
                             font_color)
+    
+    create_cover_pdf(page_height, page_width, pages_order)
 
 def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order, target_width_px):
     if image_paths:
@@ -1049,7 +1100,7 @@ def create_cover(paper_size, output_folder, pages_order):
     }
     paper_size = paper_size_mapping[paper_size]
 
-    page_height, page_width = paper_size
+    page_width, page_height = paper_size
 
     image_paths = detect_images_in_folder(folder_path="input")
     if image_paths: 
@@ -1094,10 +1145,11 @@ def create_cover(paper_size, output_folder, pages_order):
         print("1. A single cover page (must be named 'cover.png').")
         print("2. A transparent character (must be named 'character.png').")
         print("3. A transparent manga or book name/title PNG (must be named 'name.png').")
-        print("4. You can have 2 of either front/back/spine covers (or none at all), it will generate the remaining one.")
+        print("4. A transparent manga or book editorial PNG (must be named 'editorial.png').")
+        print("4. You can have 2 of either front/back/spine covers (or none at all), it will generate the remaining one(s).")
         print("5. You have to name the parts 'back.png', 'cover.png' or 'spine.png'.")
         print("6. Everything above must be in the 'cover' folder.")
-        print("7. You can use a custom font by changing it's name to 'custom_font.ttf' and putting it in the 'assets' folder.")
+        print("7. All the assets in the 'assets' folder can be changed, you just have to rename them.")
         print("--------------------------------------------------------------------------------------------------------")
 
         input("\nPress Enter to continue...\n")
