@@ -2,6 +2,7 @@ import os
 import re
 import zipfile
 import random
+import textwrap
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, A5, letter, landscape
@@ -480,8 +481,6 @@ def generate_just_cover(cover_path, target_height_px, target_width_px, spine_col
         # Add title
         if not title_path:
             print("No 'title.png' file found, writing the name on the cover...")
-            
-            # Title
 
             title = name
             font_size = target_height_px // 12
@@ -603,10 +602,8 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
         y_offset = ((text_height // 2) - padding) * -1 # I don't know why this works either. And for me it's just so pretty.
 
         text_draw.text((0, y_offset), title, font=font, fill=font_color)
-        text_layer.save("cover/non_rotated_text.png", dpi=(300, 300))
 
         rotated_text = text_layer.rotate(-90, expand=True)
-        rotated_text.save("cover/rotated_text.png", dpi=(300, 300))
 
         rotated_width, rotated_height = rotated_text.size
         x_pos = (target_width_px - rotated_width) // 2 
@@ -620,9 +617,7 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
 
         # Add spine darker color, number and character image
 
-        if volume_number != 0:
-            print("Adding color to the spine and volume number")
-            
+        if volume_number != 0:            
             # Add color to spine
 
             darker_spine_color = darken_color(spine_color, 0.8)
@@ -668,13 +663,8 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
                     
                     character_image = character_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-                    print(f"Spine page size: {spine_page.size}")
-                    print(f"Character image size: {character_image.size}")
-                    
                     x_pos = (target_width_px - new_width) // 2
                     y_pos = int(title_and_number_height + spacing)
-
-                    print(f"x_pos: {x_pos}, y_pos: {y_pos}")
 
                     title_number_character_height = y_pos + new_height + spacing
                     spine_page.paste(character_image, (x_pos, y_pos), character_image)
@@ -709,10 +699,8 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
 
         y_offset = ((text_height // 2) - padding) * -1 
         text_draw.text((0, y_offset), title, font=font, fill=font_color)
-        text_layer.save("cover/non_author_text.png", dpi=(300, 300))
 
         rotated_text = text_layer.rotate(-90, expand=True)
-        rotated_text.save("cover/author_text.png", dpi=(300, 300))
 
         rotated_width, rotated_height = rotated_text.size
         x_pos = (target_width_px - rotated_width) // 2 
@@ -737,21 +725,24 @@ def generate_just_spine(target_height_px, total_pages, volume_number, name, char
     spine_page.save("cover/spine.png", dpi=(300, 300))
     return
 
-def generate_just_back_cover(cover_path, name, author, back_color, title_path):
+def generate_just_back_cover(cover_path, name, author, back_color, title_path, description, font_color):
     cover_folder = "cover"
     back_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "back.png"), None)
+    cover_path = "cover/cover.png"
 
     with Image.open(cover_path) as cover_img:
         target_width_px, target_height_px = cover_img.size
         
     if not back_path:
         # Create Image
+
         print("No 'back.png' file found, creating one...")
         back_page = Image.new("RGBA", (target_width_px, target_height_px), color=back_color)
 
-        # Add book/manga title to a corner
+        # Title
+
         title = str(name)
-        font_size = int(target_width_px * 0.6)
+        font_size = target_height_px // 15
 
         try:
             font = ImageFont.truetype("assets/custom_font.ttf", font_size)
@@ -765,10 +756,131 @@ def generate_just_back_cover(cover_path, name, author, back_color, title_path):
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
 
-        x_pos = 0
-        y_pos = 0
+        x_pos = (target_width_px - text_width) // 2 
+        y_pos = int(target_height_px * 0.05) 
 
-        draw.text((x_pos, y_pos), title, font=font, fill=(255, 255, 255))
+        title_height_used = y_pos + text_height
+
+        draw.text((x_pos, y_pos), title, font=font, fill=font_color)
+
+        # Description
+
+        if description:
+            description = str(description)
+            font_size = target_height_px // 42
+
+            try:
+                font = ImageFont.truetype("assets/custom_font.ttf", font_size)
+            except IOError:
+                print("'custom_font.ttf' not found. Using default font.")
+                font = ImageFont.load_default()
+
+            draw = ImageDraw.Draw(back_page)
+
+            wrapped_text = textwrap.wrap(description, width=60)
+
+            spacing = int(target_height_px * 0.08)
+            y = spacing + title_height_used
+
+            line_spacing = int(font_size * 1.2)
+            for line in wrapped_text:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_width = bbox[2] - bbox[0]
+
+                x = (target_width_px - line_width) // 2
+
+                draw.text((x, y), line, font=font, fill=font_color, align="center")
+                y += line_spacing
+
+        # Author
+
+        author = str(author)
+        font_size = target_height_px // 35
+
+        try:
+            font = ImageFont.truetype("assets/custom_font.ttf", font_size)
+        except IOError:
+            print("'custom_font.ttf' not found. Using default font.")
+            font = ImageFont.load_default()
+
+        draw = ImageDraw.Draw(back_page)
+
+        bbox = draw.textbbox((0, 0), author, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        author_text_width = text_width
+
+        padding = 20
+        x_pos = int(target_width_px - text_width - padding)
+        y_pos = int(target_height_px * 0.95)
+        draw.text((x_pos, y_pos), author, font=font, fill=font_color)
+
+        # Title image
+
+        if title_path:
+            print("Adding title image")
+            with Image.open(title_path) as title_image:
+                title_image = title_image.convert("RGBA")
+
+                new_width = target_width_px // 5
+                aspect_ratio = title_image.height / title_image.width
+                new_height = int(new_width * aspect_ratio)
+                
+                title_image = title_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+                x_pos = int(target_width_px - new_width / 2 - author_text_width / 2 - padding)
+                y_pos = int(target_height_px * 0.87)
+
+                back_page.paste(title_image, (x_pos, y_pos), title_image)
+
+        # Add barcode and qr code for astetiks
+
+        try:
+            # Barcode
+            barcode_path = "assets/barcode.png"
+            with Image.open(barcode_path) as barcode_image:
+                barcode_image = barcode_image.convert("RGBA")
+
+                new_width = target_width_px // 4
+                aspect_ratio = barcode_image.height / barcode_image.width
+                new_height = int(new_width * aspect_ratio)
+
+                barcode_image = barcode_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+                padding = int(target_width_px * 0.03)
+                x_pos = int(padding)
+                y_pos = int(target_height_px * 0.98) - new_height
+
+                barcode_width = new_width + padding
+                barcode_height = new_height
+
+                back_page.paste(barcode_image, (x_pos, y_pos), barcode_image)
+        except Exception as e:
+            print(f"Error adding barcode: {e}")
+
+        while True:
+            check = input("Do you want to add a QR code of the tool? It will look at least OK I promise. You can also rename de PNG with your own... (y/n): ").strip().lower()
+            if check in ["y", "n"]:
+                break
+        if check == "y":
+            try:
+                # QR code
+                qr_path = "assets/qr.png"
+                with Image.open(qr_path) as qr_image:
+                    qr_image = qr_image.convert("RGBA")
+
+                    new_height = barcode_height
+                    new_width = new_height
+                    
+                    qr_image = qr_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+                    x_pos = int(padding + barcode_width)
+                    y_pos = int(target_height_px * 0.98) - new_height
+
+                    back_page.paste(qr_image, (x_pos, y_pos), qr_image)
+            except Exception as e:
+                print(f"Error adding QR code: {e}")
     else:
         with Image.open(back_path) as back_img:
             back_img = back_img.resize((target_width_px, target_height_px), Image.Resampling.LANCZOS)
@@ -776,8 +888,7 @@ def generate_just_back_cover(cover_path, name, author, back_color, title_path):
     
     back_page.save("cover/back.png", dpi=(300, 300))
 
-    back_page.save("cover/back.png", dpi=(300, 300))
-def generate_full_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, target_width_px, paper_size, front_color, pages_order, paper_thickness, font_color):
+def generate_full_cover(total_pages, volume_number, name, author, back_color, spine_color, cover_path, character_path, title_path, target_height_px, target_width_px, paper_size, front_color, pages_order, paper_thickness, font_color, description):
     page_height, page_width = paper_size
 
     spine_color, back_color = generate_just_cover(cover_path, 
@@ -801,12 +912,13 @@ def generate_full_cover(total_pages, volume_number, name, author, back_color, sp
                         font_color,
                         author)
     
-    #generate_just_back_cover(cover_path,
-        #                name,
-       #                 author,
-        #                back_color,
-         #               title_path,
-          #              )
+    generate_just_back_cover(cover_path,
+                            name,
+                            author,
+                            back_color,
+                            title_path,
+                            description,
+                            font_color)
 
 def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order, target_width_px):
     if image_paths:
@@ -849,6 +961,8 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
         description = input("Please enter the description of the manga or book for displaying, or enter 'skip' for no description: ")
         if description == "skip":
             description == None
+            break
+        else:
             break
     while True:	
         front_color = input("Please enter the hex code of the front-cover color (eg. #000000), or 'default' to let the program choose (will be omitted if you already have a cover): ").strip()
@@ -899,7 +1013,8 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
                     front_color,
                     pages_order,
                     paper_thickness,
-                    font_color)
+                    font_color,
+                    description)
 
 def welcome_message_cover():    
     print()
