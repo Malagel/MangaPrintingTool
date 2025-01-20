@@ -116,7 +116,7 @@ def cut_double_page(image_path, manga_width, check):
             left_page = img.crop((0, 0, middle, img_height))
             right_page = img.crop((middle, 0, img_width, img_height))
 
-            return left_page, right_page
+            return right_page, left_page
         else:
             return None, None
 
@@ -244,8 +244,8 @@ def add_blank_page(image_paths, input_folder):
         
     return blank_page_path
 
-def validate_printing_order(image_paths, double_page_paths, pages_order, check):
-    if pages_order == "right" and double_page_paths:
+def validate_printing_order(image_paths, double_page_paths, check):
+    if double_page_paths:
         total_pages = len(image_paths)
 
         for path in double_page_paths:
@@ -258,20 +258,6 @@ def validate_printing_order(image_paths, double_page_paths, pages_order, check):
                 blank_page_path = add_blank_page(image_paths, input_folder='input')
                 image_paths.insert(0, blank_page_path)
                 break
-    elif pages_order == "left" and double_page_paths:
-        total_pages = len(image_paths)
-
-        for path in double_page_paths:
-            index = image_paths.index(path)
-
-            if check == False and (index == 0 or index == total_pages - 1):
-                raise ValueError("The first or last page can't be a double page. Please change the order of the pages.")
-
-            if index % 2 == 1:
-                blank_page_path = add_blank_page(image_paths, input_folder='input')
-                image_paths.insert(0, blank_page_path)
-                break
-
     return image_paths
 
 def validate_divisibility_by_4(image_paths):
@@ -441,7 +427,7 @@ def draw_pdf(image_paths, output_folder, paper_size):
 def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_paths, check):
 
     print("Validating printing order...")
-    image_paths = validate_printing_order(image_paths, double_page_paths, pages_order, check)
+    image_paths = validate_printing_order(image_paths, double_page_paths, check)
     
     print("Validating divisibility by 4...")
     image_paths = validate_divisibility_by_4(image_paths)
@@ -1302,18 +1288,32 @@ def main():
                 delete_initial_pages = False
                 break
         while True:
-            manga_size = input("Please choose the width of the manga/book in centimeters (eg: 12.5) or type 'full' to cover the whole page: ").strip()
-            if manga_size.isnumeric() and float(manga_size) > 0 and float(manga_size) <= 15: 
-                manga_size = int(manga_size)
-                break
-            elif manga_size == "full":
+            manga_size = input(
+                "Please choose the width of the manga/book you want in centimeters (eg: 12.5) or type 'full' to cover the whole page: "
+            ).strip()
+
+            if manga_size.lower() == "full":
                 size = {
-                    "A4": 15,
-                    "Letter": 13,
-                    "A5": 9,
+                    "A4": 14.85,
+                    "LETTER": 13.9,
+                    "A5": 10.5,
                 }
                 manga_size = size[paper_size]
                 break
+
+            try:
+                manga_size = float(manga_size)
+
+                if paper_size == "A4" and manga_size > 14.85:
+                    print("The maximum width for A4 is 14.85 cm.")
+                elif paper_size == "LETTER" and manga_size > 13.9:
+                    print("The maximum width for Letter is 13.9 cm.")
+                elif paper_size == "A5" and manga_size > 10.5:
+                    print("The maximum width for A5 is 10.5 cm.")
+                else:
+                    break  # Valid input within range
+            except ValueError:
+                print("Invalid input. Please enter a number or 'full'.")
     try:
         if choose_creation == "book":
             images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)
@@ -1325,13 +1325,13 @@ def main():
             create_cover(paper_size, output_folder, pages_order) 
 
         while True:   
-            check = input("\nProcess finnished, do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n): ").strip().lower()
+            check = input("\nDo you want to delete everything in the input folder? Useful if you want to print again or change something (y/n): ").strip().lower()
             if check in ["y", "n"]:
                 if check == "y":
                     for file in os.listdir(input_folder):
                         file_path = os.path.join(input_folder, file)
                         os.remove(file_path)
-                    print("\nAll files in the input folder have been deleted.")
+                    print("--- All files in the input folder have been deleted. ---")
                 break
         input("\nPress Enter to exit...")
     
