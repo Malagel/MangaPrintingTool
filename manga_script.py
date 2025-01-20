@@ -11,6 +11,9 @@ from reportlab.lib.pagesizes import A4, A5, letter, landscape
 def cm_to_pixels(cm, dpi):
     return int(cm * dpi / 2.54)
 
+def points_to_pixels(points, dpi=300):
+    return points * (dpi / 72)
+
 def resize_image(img, target_width_cm, dpi=300):
     target_width_px = cm_to_pixels(target_width_cm, dpi)
     img_width, img_height = img.size
@@ -107,7 +110,7 @@ def cut_double_page(image_path, manga_width, check):
 
             return left_page, right_page
         
-        if not check and img_width > manga_width * 1.2: # 20% margin of error
+        if not check and img_width > manga_width * 1.3: # 30% margin of error
             middle = img_width // 2
 
             left_page = img.crop((0, 0, middle, img_height))
@@ -242,8 +245,6 @@ def add_blank_page(image_paths, input_folder):
     return blank_page_path
 
 def validate_printing_order(image_paths, double_page_paths, pages_order, check):
-    # print(double_page_paths)
-
     if pages_order == "right" and double_page_paths:
         total_pages = len(image_paths)
 
@@ -257,7 +258,20 @@ def validate_printing_order(image_paths, double_page_paths, pages_order, check):
                 blank_page_path = add_blank_page(image_paths, input_folder='input')
                 image_paths.insert(0, blank_page_path)
                 break
-    
+    elif pages_order == "left" and double_page_paths:
+        total_pages = len(image_paths)
+
+        for path in double_page_paths:
+            index = image_paths.index(path)
+
+            if check == False and (index == 0 or index == total_pages - 1):
+                raise ValueError("The first or last page can't be a double page. Please change the order of the pages.")
+
+            if index % 2 == 1:
+                blank_page_path = add_blank_page(image_paths, input_folder='input')
+                image_paths.insert(0, blank_page_path)
+                break
+
     return image_paths
 
 def validate_divisibility_by_4(image_paths):
@@ -1099,24 +1113,32 @@ def create_cover(paper_size, output_folder, pages_order):
             target_width_px = int(get_average_page_width(image_paths, False))
         else:
             while True:
-                target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
-                if target_height_px.isnumeric():
+                target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ").strip()
+                if int(target_height_px) >= points_to_pixels(page_height):
+                    print("The height of the cover cannot be greater than the height of the paper.")
+                elif target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
                     break
             while True:
-                target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ")
-                if target_width_px.isnumeric():
+                target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ").strip()
+                if (target_height_px * 2.08) >= points_to_pixels(page_width):
+                    print("The width of the covers and spine cannot be greater than the width of the paper.")
+                elif target_width_px.isnumeric():
                     target_width_px = int(target_width_px)
                     break
     else:
         while True:
-                target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ")
-                if target_height_px.isnumeric():
+                target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ").strip()
+                if int(target_height_px) >= points_to_pixels(page_height):
+                    print("The height of the cover cannot be greater than the height of the paper.")
+                elif target_height_px.isnumeric():
                     target_height_px = int(target_height_px)
                     break
         while True:
-                target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ")
-                if target_width_px.isnumeric():
+                target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ").strip()
+                if (target_height_px * 2.08) >= points_to_pixels(page_width):
+                    print("The width of the covers and spine cannot be greater than the width of the paper.")
+                elif target_width_px.isnumeric():
                     target_width_px = int(target_width_px)
                     break
     while True:
@@ -1280,18 +1302,18 @@ def main():
                 delete_initial_pages = False
                 break
         while True:
-            manga_size = input("Please choose the width of the manga/book in centimeters (usually it's 12cm) or type 'full': ").strip()
-            if manga_size.isnumeric() and int(manga_size) > 0 and int(manga_size) < 20: 
+            manga_size = input("Please choose the width of the manga/book in centimeters (eg: 12.5) or type 'full' to cover the whole page: ").strip()
+            if manga_size.isnumeric() and float(manga_size) > 0 and float(manga_size) <= 15: 
                 manga_size = int(manga_size)
                 break
             elif manga_size == "full":
                 size = {
-                    "A4": 14,
+                    "A4": 15,
                     "Letter": 13,
                     "A5": 9,
                 }
                 manga_size = size[paper_size]
-            break
+                break
     try:
         if choose_creation == "book":
             images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)
@@ -1300,8 +1322,17 @@ def main():
             print(f"\nPDF saved in: {output_folder}\n")
             goodbye_message()
         else:
-            create_cover(paper_size, output_folder, pages_order)    
+            create_cover(paper_size, output_folder, pages_order) 
 
+        while True:   
+            check = input("\nProcess finnished, do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n): ").strip().lower()
+            if check in ["y", "n"]:
+                if check == "y":
+                    for file in os.listdir(input_folder):
+                        file_path = os.path.join(input_folder, file)
+                        os.remove(file_path)
+                    print("\nAll files in the input folder have been deleted.")
+                break
         input("\nPress Enter to exit...")
     
     except Exception as e:
