@@ -75,7 +75,7 @@ def organize_image_paths(image_paths, delete_initial_pages):
     if delete_initial_pages:
         image_paths = [image for image in image_paths if '000' not in os.path.basename(image) and '0000' not in os.path.basename(image)] 
 
-    all_digits = all(os.path.basename(image).isdigit() for image in image_paths)
+    all_digits = all(os.path.splitext(os.path.basename(image))[0].isdigit() for image in image_paths)
                             
     if all_digits:
         image_paths.sort(key=lambda x: int(os.path.basename(x)))
@@ -1294,22 +1294,21 @@ def main():
 
             if manga_size.lower() == "full":
                 size = {
-                    "A4": 14.85,
-                    "LETTER": 13.9,
-                    "A5": 10.5,
+                    "A4": 14.6,
+                    "LETTER": 13.4,
+                    "A5": 10,
                 }
                 manga_size = size[paper_size]
                 break
-
             try:
                 manga_size = float(manga_size)
 
-                if paper_size == "A4" and manga_size > 14.85:
-                    print("The maximum width for A4 is 14.85 cm.")
-                elif paper_size == "LETTER" and manga_size > 13.9:
-                    print("The maximum width for Letter is 13.9 cm.")
-                elif paper_size == "A5" and manga_size > 10.5:
-                    print("The maximum width for A5 is 10.5 cm.")
+                if paper_size == "A4" and manga_size > 14.6:
+                    print("The maximum width for A4 is 14.6 cm.")
+                elif paper_size == "LETTER" and manga_size > 13.4:
+                    print("The maximum width for Letter is 13.4 cm.")
+                elif paper_size == "A5" and manga_size > 10:
+                    print("The maximum width for A5 is 10 cm.")
                 else:
                     break  # Valid input within range
             except ValueError:
@@ -1321,18 +1320,20 @@ def main():
 
             print(f"\nPDF saved in: {output_folder}\n")
             goodbye_message()
+
+            while True:   
+                check = input("\nDo you want to delete everything in the input folder? Useful if you want to print again or change something (y/n): ").strip().lower()
+                if check in ["y", "n"]:
+                    if check == "y":
+                        for file in os.listdir(input_folder):
+                            file_path = os.path.join(input_folder, file)
+                            os.remove(file_path)
+                        print("--- All files in the input folder have been deleted. ---")
+                    break
         else:
             create_cover(paper_size, output_folder, pages_order) 
 
-        while True:   
-            check = input("\nDo you want to delete everything in the input folder? Useful if you want to print again or change something (y/n): ").strip().lower()
-            if check in ["y", "n"]:
-                if check == "y":
-                    for file in os.listdir(input_folder):
-                        file_path = os.path.join(input_folder, file)
-                        os.remove(file_path)
-                    print("--- All files in the input folder have been deleted. ---")
-                break
+        
         input("\nPress Enter to exit...")
     
     except Exception as e:
