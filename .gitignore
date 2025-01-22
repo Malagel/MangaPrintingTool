@@ -177,3 +177,6 @@ assets
 cover
 input
 output
+pages 
+create_pages.py
+custom_font.ttf

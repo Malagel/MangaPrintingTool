@@ -78,7 +78,7 @@ def organize_image_paths(image_paths, delete_initial_pages):
     all_digits = all(os.path.splitext(os.path.basename(image))[0].isdigit() for image in image_paths)
                             
     if all_digits:
-        image_paths.sort(key=lambda x: int(os.path.basename(x)))
+        image_paths.sort(key=lambda x: int(os.path.splitext(os.path.basename(x))[0]))
     else:
         all_pXXX = all(page_regex.search(os.path.basename(image)) for image in image_paths)
         
@@ -162,6 +162,7 @@ def resize_and_save_images(image_paths, target_width_cm, input_folder):
                 left_page_path = os.path.join(input_folder, f"{str(counter+1).zfill(3)}.png")
                 right_page_path = os.path.join(input_folder, f"{str(counter).zfill(3)}.png")
 
+                os.remove(image_path)
                 left_page_resized.save(left_page_path, dpi=(300, 300))
                 right_page_resized.save(right_page_path, dpi=(300, 300))
                 
@@ -176,13 +177,12 @@ def resize_and_save_images(image_paths, target_width_cm, input_folder):
 
                     img_page_path = os.path.join(input_folder, f"{str(counter).zfill(3)}.png")
 
+                    os.remove(image_path)
                     img_resized.save(img_page_path, dpi=(300, 300))
 
                     new_image_paths.append(img_page_path)
 
                 counter += 1
-
-            os.remove(image_path)
 
         except Exception as e:
             print(f"Error processing image {image_path}: {str(e)}")
