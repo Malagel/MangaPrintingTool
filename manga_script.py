@@ -8,8 +8,13 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, A5, letter, landscape
 
 
+# Small utility functions
+
 def cm_to_pixels(cm, dpi):
     return int(cm * dpi / 2.54)
+
+def pixels_to_points(pixels, dpi=300):
+    return (pixels / dpi) * 72 
 
 def points_to_pixels(points, dpi=300):
     return points * (dpi / 72)
@@ -56,47 +61,38 @@ def get_average_page_height(image_files):
 
     return total_height / total_pages
 
-def get_minimum_page_height(input_folder):
-    image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.png'))]
-    total_height = 0
-    total_pages = 0
+def get_minimum_page_height(image_paths):
+    min_height = float('inf')
+    for image_path in image_paths:
+        try:
+            with Image.open(image_path) as img:
+                if img.height < min_height:
+                    min_height = img.height
+        except Exception as e:
+            print(f"Error getting minimum height of image {image_path}: {e}")
 
-    for image in image_files:
-        with Image.open(os.path.join(input_folder, image)) as img:
-            total_height += img.height
-            total_pages += 1
+    return min_height
 
-    return total_height / total_pages
+def add_blank_page(image_paths, input_folder):
+    counter = 0
+    while True:
+        blank_page_path = os.path.join(input_folder, f"blank_page_{counter}.png")
+        if not os.path.exists(blank_page_path):
+            break
+        counter += 1
 
-def organize_image_paths(image_paths, delete_initial_pages):
-    page_regex = re.compile(r"p(\d{3})")
-    digits_regex = re.compile(r"(\d{3,4})")
+    with Image.open(image_paths[1]) as img:
+        img_width, img_height = img.size
+        mode = "RGB"
 
-    if delete_initial_pages:
-        image_paths = [image for image in image_paths if '000' not in os.path.basename(image) and '0000' not in os.path.basename(image)] 
-
-    all_digits = all(os.path.splitext(os.path.basename(image))[0].isdigit() for image in image_paths)
-                            
-    if all_digits:
-        image_paths.sort(key=lambda x: int(os.path.splitext(os.path.basename(x))[0]))
-    else:
-        all_pXXX = all(page_regex.search(os.path.basename(image)) for image in image_paths)
+        blank_page = Image.new(mode, (img_width, img_height), color=(255, 255, 255))
+        blank_page.save(blank_page_path)
         
-        if all_pXXX:
-            image_paths.sort(key=lambda x: int(page_regex.search(os.path.basename(x)).group(1)))
-        else:
-            print("\nWARNING: Some of the image filenames don't follow the 'pXXX' format or have non-standard digits.")
-            print("The function will now search for files using a simple three-digit number (XXX),")
-            print("and it assumes there is only one 3-digit or 4-digit number in each filename.\n")
+    return blank_page_path
 
-            user_input = input("Do you confirm that the filenames only have ONE SINGLE 3-digit or 4-digit number in their name? (y/n): ")
-            print("\n")
-            if user_input.lower() != 'y':
-                raise ValueError("Please ensure filenames are renamed with either a 3-digit number, 4-digit, XXX or pXXX format.")
-
-            image_paths.sort(key=lambda x: int(digits_regex.search(os.path.basename(x)).group(1)))
-            
-    return image_paths
+def extract_file(file, output_folder):
+    with zipfile.ZipFile(file, 'r') as zip_ref:
+        zip_ref.extractall(output_folder)
 
 def cut_double_page(image_path, manga_width, check):
     with Image.open(image_path) as img:
@@ -138,6 +134,75 @@ def check_if_all_pages_are_double(image_paths):
         if answer.lower() == 'y':
             return True
     return False
+
+def trim_images(image_paths):
+    height = get_minimum_page_height(image_paths)
+    # print(f"height: {height}")
+
+    for image_path in image_paths:
+        try:
+            with Image.open(image_path) as img:
+                img_width, img_height = img.size
+
+                if img_height > height:
+                    img = img.crop((0, 0, img_width, height))
+                    img.save(image_path)
+                    # print(f"Image {image_path} trimmed.")
+
+        except Exception as e:
+            print(f"Error trimming image {image_path}: {e}") 
+
+def hex_to_rgb(hex_color):
+    return ImageColor.getrgb(hex_color)     
+
+def darken_color(color, factor):
+    return tuple(max(0, int(c * factor)) for c in color)
+
+def detect_images_in_folder(folder_path):
+    image_paths = [
+        os.path.join(root, file)
+        for root, _, files in os.walk(folder_path)
+        for file in files
+        if file.endswith(('.jpg', '.png'))
+    ]
+    
+    if not image_paths:
+        return None
+
+    return image_paths
+
+
+# Core book creation functions
+
+def organize_image_paths(image_paths, delete_initial_pages):
+    page_regex = re.compile(r"p(\d{3})")
+    digits_regex = re.compile(r"(\d{3,4})")
+
+    if delete_initial_pages:
+        image_paths = [image for image in image_paths if '000' not in os.path.basename(image) and '0000' not in os.path.basename(image)] 
+
+    all_digits = all(os.path.splitext(os.path.basename(image))[0].isdigit() for image in image_paths)
+                            
+    if all_digits:
+        image_paths.sort(key=lambda x: int(os.path.splitext(os.path.basename(x))[0]))
+    else:
+        all_pXXX = all(page_regex.search(os.path.basename(image)) for image in image_paths)
+        
+        if all_pXXX:
+            image_paths.sort(key=lambda x: int(page_regex.search(os.path.basename(x)).group(1)))
+        else:
+            print("\nWARNING: Some of the image filenames don't follow the 'pXXX' format or have non-standard digits.")
+            print("The function will now search for files using a simple three-digit number (XXX),")
+            print("and it assumes there is only one 3-digit or 4-digit number in each filename.\n")
+
+            user_input = input("Do you confirm that the filenames only have ONE SINGLE 3-digit or 4-digit number in their name? (y/n): ")
+            print("\n")
+            if user_input.lower() != 'y':
+                raise ValueError("Please ensure filenames are renamed with either a 3-digit number, 4-digit, XXX or pXXX format.")
+
+            image_paths.sort(key=lambda x: int(digits_regex.search(os.path.basename(x)).group(1)))
+            
+    return image_paths
 
 def resize_and_save_images(image_paths, target_width_cm, input_folder):
 
@@ -223,109 +288,6 @@ def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
 
     return image_paths, double_page_paths, check
 
-def extract_file(file, output_folder):
-    with zipfile.ZipFile(file, 'r') as zip_ref:
-        zip_ref.extractall(output_folder)
-
-def add_blank_page(image_paths, input_folder):
-    counter = 0
-    while True:
-        blank_page_path = os.path.join(input_folder, f"blank_page_{counter}.png")
-        if not os.path.exists(blank_page_path):
-            break
-        counter += 1
-
-    with Image.open(image_paths[1]) as img:
-        img_width, img_height = img.size
-        mode = "RGB"
-
-        blank_page = Image.new(mode, (img_width, img_height), color=(255, 255, 255))
-        blank_page.save(blank_page_path)
-        
-    return blank_page_path
-
-def validate_printing_order(image_paths, double_page_paths, check):
-    if double_page_paths:
-        total_pages = len(image_paths)
-
-        for path in double_page_paths:
-            index = image_paths.index(path)
-
-            if check == False and (index == 0 or index == total_pages - 1):
-                raise ValueError("The first or last page can't be a double page. Please change the order of the pages.")
-
-            if index % 2 == 0:
-                blank_page_path = add_blank_page(image_paths, input_folder='input')
-                image_paths.insert(0, blank_page_path)
-                break
-    return image_paths
-
-def validate_divisibility_by_4(image_paths):
-    pages_total = len(image_paths)
-
-    if pages_total < 4:
-        raise ValueError("Not enough pages to create a PDF. Please provide at least 4 pages.")
-    
-    if pages_total % 4 == 0:
-        return image_paths
-    
-    # First attempt: Add 2 blank pages
-
-    blank_pages_added = 0
-    while len(image_paths) % 4 != 0 and blank_pages_added < 2:
-        blank_page_path = add_blank_page(image_paths, input_folder='input')
-        image_paths.append(blank_page_path)
-        blank_pages_added += 1
-
-    if len(image_paths) % 4 == 0:
-        return image_paths
-    
-    # Second attempt: Remove up to 4 pages
-
-    pages_deleted = 0
-    while len(image_paths) % 4 != 0 and pages_deleted < 4:
-        image_paths.pop()
-        pages_deleted += 1
-        # print("Deleting last page...")       
-
-    if len(image_paths) % 4 != 0:
-        raise ValueError("""
-            The program couldn't create a PDF because the number of pages must be divisible by 4. 
-            Two blank pages were added, and up to four pages were removed, but it wasn't enough. 
-            Please delete or add pages manually until the total is divisible by 4.
-        """)
-
-    return image_paths
-
-def get_minimum_page_height(image_paths):
-    min_height = float('inf')
-    for image_path in image_paths:
-        try:
-            with Image.open(image_path) as img:
-                if img.height < min_height:
-                    min_height = img.height
-        except Exception as e:
-            print(f"Error getting minimum height of image {image_path}: {e}")
-
-    return min_height
-	
-def trim_images(image_paths):
-    height = get_minimum_page_height(image_paths)
-    # print(f"height: {height}")
-
-    for image_path in image_paths:
-        try:
-            with Image.open(image_path) as img:
-                img_width, img_height = img.size
-
-                if img_height > height:
-                    img = img.crop((0, 0, img_width, height))
-                    img.save(image_path)
-                    # print(f"Image {image_path} trimmed.")
-
-        except Exception as e:
-            print(f"Error trimming image {image_path}: {e}")    
-
 def organize_printing_paths(image_paths, pages_order):
     total_pages = len(image_paths)
     new_image_paths = []
@@ -377,12 +339,6 @@ def organize_printing_paths(image_paths, pages_order):
                 right_index -= 1
 
         return new_image_paths
-
-def pixels_to_points(pixels, dpi=300):
-    return (pixels / dpi) * 72 
-
-def hex_to_rgb(hex_color):
-    return ImageColor.getrgb(hex_color)
 
 def draw_pdf(image_paths, output_folder, paper_size):
 
@@ -440,6 +396,65 @@ def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_
 
     draw_pdf(image_paths, output_folder, paper_size)
 
+
+# Book pages order validation
+
+def validate_printing_order(image_paths, double_page_paths, check):
+    if double_page_paths:
+        total_pages = len(image_paths)
+
+        for path in double_page_paths:
+            index = image_paths.index(path)
+
+            if check == False and (index == 0 or index == total_pages - 1):
+                raise ValueError("The first or last page can't be a double page. Please change the order of the pages.")
+
+            if index % 2 == 0:
+                blank_page_path = add_blank_page(image_paths, input_folder='input')
+                image_paths.insert(0, blank_page_path)
+                break
+    return image_paths
+
+def validate_divisibility_by_4(image_paths):
+    pages_total = len(image_paths)
+
+    if pages_total < 4:
+        raise ValueError("Not enough pages to create a PDF. Please provide at least 4 pages.")
+    
+    if pages_total % 4 == 0:
+        return image_paths
+    
+    # First attempt: Add 2 blank pages
+
+    blank_pages_added = 0
+    while len(image_paths) % 4 != 0 and blank_pages_added < 2:
+        blank_page_path = add_blank_page(image_paths, input_folder='input')
+        image_paths.append(blank_page_path)
+        blank_pages_added += 1
+
+    if len(image_paths) % 4 == 0:
+        return image_paths
+    
+    # Second attempt: Remove up to 4 pages
+
+    pages_deleted = 0
+    while len(image_paths) % 4 != 0 and pages_deleted < 4:
+        image_paths.pop()
+        pages_deleted += 1
+        # print("Deleting last page...")       
+
+    if len(image_paths) % 4 != 0:
+        raise ValueError("""
+            The program couldn't create a PDF because the number of pages must be divisible by 4. 
+            Two blank pages were added, and up to four pages were removed, but it wasn't enough. 
+            Please delete or add pages manually until the total is divisible by 4.
+        """)
+
+    return image_paths
+
+
+# Messages
+
 def welcome_message():
     print()
     print("--------------------------------------------------------------------------------------------------------")
@@ -460,12 +475,20 @@ def goodbye_message():
     print("3. If you don't have a double-side printer, make sure to first print all the odd pages, then all the even pages.")
     print("4. When the odd pages are ready, flip it 90 degrees towards the printer (so they are vertical) and put it in again.")
 
+def welcome_message_cover():    
+    print()
+    print("--------------------------------------------------------------------------------------------------------")
+    print("                                Welcome to the Cover Creation Tool")
+    print("--------------------------------------------------------------------------------------------------------")
+    print("            This tool will help you create a personalized cover for your manga or book.")
+    print("    If you have a cover page, just put them inside the 'cover' folder so it can be resized correctly.")
+    print("   You can put either 1 or 3 images, using 1 will resize it, if not they will be merged and resized.")
+    print("                If you don't have a cover page, you will be prompted to create one.")
+    print("--------------------------------------------------------------------------------------------------------")
+    print()
+
 
 # Cover functions
-
-
-def darken_color(color, factor):
-    return tuple(max(0, int(c * factor)) for c in color)
 
 def generate_just_cover(cover_path, target_height_px, target_width_px, spine_color, back_color, title_path, name, author, front_color, font_color):
     if not cover_path:
@@ -1048,31 +1071,6 @@ def personalized_cover_creation(page_height, page_width, target_height_px, paper
                     font_color,
                     description)
 
-def welcome_message_cover():    
-    print()
-    print("--------------------------------------------------------------------------------------------------------")
-    print("                                Welcome to the Cover Creation Tool")
-    print("--------------------------------------------------------------------------------------------------------")
-    print("            This tool will help you create a personalized cover for your manga or book.")
-    print("    If you have a cover page, just put them inside the 'cover' folder so it can be resized correctly.")
-    print("   You can put either 1 or 3 images, using 1 will resize it, if not they will be merged and resized.")
-    print("                If you don't have a cover page, you will be prompted to create one.")
-    print("--------------------------------------------------------------------------------------------------------")
-    print()
-
-def detect_images_in_folder(folder_path):
-    image_paths = [
-        os.path.join(root, file)
-        for root, _, files in os.walk(folder_path)
-        for file in files
-        if file.endswith(('.jpg', '.png'))
-    ]
-    
-    if not image_paths:
-        return None
-
-    return image_paths
-
 def create_cover(paper_size, output_folder, pages_order):
     paper_size_mapping = {
     "A4": A4,
@@ -1250,6 +1248,9 @@ def create_cover(paper_size, output_folder, pages_order):
 
         print(f"Cover PDF created at {output_pdf}.")
 
+
+# Main
+
 def main():
     input_folder = "input"
     output_folder = "output"
@@ -1294,21 +1295,21 @@ def main():
 
             if manga_size.lower() == "full":
                 size = {
-                    "A4": 14.6,
-                    "LETTER": 13.4,
-                    "A5": 10,
+                    "A4": 14.7,
+                    "LETTER": 13.8,
+                    "A5": 10.4,
                 }
                 manga_size = size[paper_size]
                 break
             try:
                 manga_size = float(manga_size)
 
-                if paper_size == "A4" and manga_size > 14.6:
-                    print("The maximum width for A4 is 14.6 cm.")
-                elif paper_size == "LETTER" and manga_size > 13.4:
-                    print("The maximum width for Letter is 13.4 cm.")
-                elif paper_size == "A5" and manga_size > 10:
-                    print("The maximum width for A5 is 10 cm.")
+                if paper_size == "A4" and manga_size > 14.7:
+                    print("The maximum width for A4 is 14.7 cm. It's recommended to not exceed 13.5 cm, to leave room for margins and create a cover.")
+                elif paper_size == "LETTER" and manga_size > 13.8:
+                    print("The maximum width for Letter is 13.8 cm. It's recommended to not exceed 13 cm, to leave room for margins and create a cover.")
+                elif paper_size == "A5" and manga_size > 10.4:
+                    print("The maximum width for A5 is 10.4 cm. It's recommended to not exceed 9.5 cm, to leave room for margins and create a cover.")
                 else:
                     break  # Valid input within range
             except ValueError:
