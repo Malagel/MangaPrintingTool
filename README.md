@@ -1,3 +1,15 @@
+# Manga Printing Tool
+
+Create a ready-to-print manga, book, or comic automatically from images.
+
+## What problem does it solve?
+
+For manga or book enthusiasts, printing their favorite titles can be a hassle. This tool simplifies the process with a straightforward approach: just place your files and double-click 'script.exe'. It handles almost everything, from splitting pages and resizing them to ensuring the print format is correct, so you don’t have to worry about the details. It also includes a basic cover creation tool, allowing you to quickly generate spines and back covers for your manga or books.
+
+
+## How to download?
+Go to to the [releases](https://github.com/Malagel/MangaPrintingTool/releases) tab and download the latest version. Unzip it and you are good to go.
+
 ## How to use it?
 
 I'm assuming you already have downloaded the latest version and unzipped it somewhere, now you got many folders and a 'script.exe'.  I'm going to explain the folders later in the "steps to create your cover", since they are mostly used there. Now, let's dive into how to create your book or manga:
@@ -8,7 +20,7 @@ I'm assuming you already have downloaded the latest version and unzipped it some
  2. After you get your files and copy it to another folder as a backup, you need to put them inside the 'input' folder of where you extracted the tool. You don't need to organize the pages yourself, the program will do it for you and if it finds a problem doing so it will tell you.
  3. Double click 'script.exe' and a command line tool will appear, where you will be prompted for many *things* that I'm going to cover (there is not that small chance that windows defender blocks the program, because it modifies images and renames them, so it can be mistaken as malware. If this happens to you press 'more information' and then 'execute'. Do not worry, it's safe).
  
-***Prompting***
+- ***Prompting***
 
 Now I will explain the prompting part, basically where the program asks you *things*. The expected answers are inside the parenthesis, anything outside them will be rejected and you will be prompted again:
 
@@ -38,5 +50,5 @@ That would be it for the tool. It can take a while to process all the images, bu
 
 (I gotta create an image for this)
 
-***How print your new creation***
+- ***How print your new creation***
  
