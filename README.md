@@ -48,7 +48,7 @@ Also, if you exceed certain measurements, you won't be able to create a cover pa
 
 That would be it for the tool. It can take a while to process all the images, but you can see the progress of it. Finally it will give you a file called 'output.pdf' inside the 'output' folder. Remember to check it like this: 
 
-(I gotta create an image for this :o)
+![pages_order](images/pages_order.png "How to check the order of your pages")
 
 - ***How to print your new creation***
 
