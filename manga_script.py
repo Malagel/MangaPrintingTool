@@ -1,6 +1,7 @@
 import os
 import re
 import zipfile
+import fitz
 import random
 import textwrap
 from PIL import Image, ImageColor, ImageDraw, ImageFont
@@ -171,6 +172,20 @@ def detect_images_in_folder(folder_path):
 
     return image_paths
 
+def pdf_to_png(pdf_path, output_folder, dpi=300):
+    pdf_document = fitz.open(pdf_path)
+
+    print("PDF found, converting to PNG...")
+    for page_num in range(len(pdf_document)):
+        page = pdf_document.load_page(page_num)
+
+        pix = page.get_pixmap(dpi=dpi)
+
+        output_file = os.path.join(output_folder, f'pdf_image_p{str(page_num + 1).zfill(3)}.png')
+        pix.save(output_file)
+        
+    pdf_document.close()
+
 
 # Core book creation functions
 
@@ -262,12 +277,17 @@ def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
     if len(cbz_files) > 1 or len(zip_files) > 1:
         raise ValueError("Please provide only one manga/book at a time.")
     if cbz_files:
-        cbz_file = os.path.join(input_folder, cbz_files[0])
-        extract_file(cbz_file, input_folder)
+        cbz_path = os.path.join(input_folder, cbz_files[0])
+        extract_file(cbz_path, input_folder)
     if zip_files:
-        zip_file = os.path.join(input_folder, zip_files[0])
-        extract_file(zip_file, input_folder)
+        zip_path = os.path.join(input_folder, zip_files[0])
+        extract_file(zip_path, input_folder)
     
+    pdf_files = [f for f in os.listdir(input_folder) if f.endswith('.pdf')]
+    if pdf_files:
+        pdf_path = os.path.join(input_folder, pdf_files[0])
+        pdf_to_png(pdf_path, input_folder, dpi=300)
+
     image_paths = [
         os.path.join(root, file)
         for root, _, files in os.walk(input_folder)

@@ -16,7 +16,7 @@ I'm assuming you already have downloaded the latest version and unzipped it some
 
 ### **Steps to create your manga or book**
 
- 1. You will first need to gather the pages, they need to be in '.jpg' or 'png' format, also they can be inside a '.cbz' or '.zip', the program will extract it for you. You **need** and I repeat, you **NEED** to have a backup of your files, since they **will get modified** in the process and you won't be able to recover their original state.
+ 1. You will first need to gather the pages, they need to be in '.jpg' or 'png' format, also they can be inside a '.cbz' or '.zip' or even a '.pdf', the program will extract it for you. You **need** and I repeat, you **NEED** to have a backup of your files, since they **will get modified** in the process and you won't be able to recover their original state.
  2. After you get your files and copy it to another folder as a backup, you need to put them inside the 'input' folder of where you extracted the tool. You don't need to organize the pages yourself, the program will do it for you and if it finds a problem doing so it will tell you.
  3. Double click 'script.exe' and a command line tool will appear, where you will be prompted for many *things* that I'm going to cover (there is not that small chance that windows defender blocks the program, because it modifies images and renames them, so it can be mistaken as malware. If this happens to you press 'more information' and then 'execute'. Do not worry, it's safe).
  
@@ -44,7 +44,7 @@ Also, if you exceed certain measurements, you won't be able to create a cover pa
  - Letter: 13 cm.
  - A5: 9.5 cm.
 
- I can't tell you what to do though, do what your heart tells you. 
+ I can't tell you what to do though, follow your heart. 
 
 That would be it for the tool. It can take a while to process all the images, but you can see the progress of it. Finally it will give you a file called 'output.pdf' inside the 'output' folder. Remember to check it like this: 
 
@@ -53,3 +53,4 @@ That would be it for the tool. It can take a while to process all the images, bu
 - ***How to print your new creation***
 
 ### **Steps to create your cover**
+
