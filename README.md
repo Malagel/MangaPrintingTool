@@ -71,7 +71,7 @@ Now that you have your PDF ready, you need to print it for both sides of the pap
 
 But of course, after doing your first batch of odd pages you will need to flip the paper. I made this amazing drawing to show you how to do exactly that:
 
-![how_to_flip_pages](images/how_to_flip_pages.png) "How to flip your pages"
+![how_to_flip_pages](images/how_to_flip_pages.png "How to flip your pages")
   
  After printing all your pages for both sides, you will need to cut them. I'm assuming you know how to do this and got even some practice from kindergarden. One important thing to notice, is that the program puts your images right in the middle of the page, so the first cut you will have to do is exactly there. Then you can trim the pages however you like, and again, follow your heart.
 
