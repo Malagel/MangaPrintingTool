@@ -73,10 +73,10 @@ But of course, after doing your first batch of odd pages you will need to flip t
 
 ![how_to_flip_pages](images/how_to_flip_pages.png "How to flip your pages")
   
- After printing all your pages for both sides, you will need to cut them. I'm assuming you know how to do this and got even some practice from kindergarden. One important thing to notice, is that the program puts your images right in the middle of the page, so the first cut you will have to do is exactly there. Then you can trim the pages however you like, and again, follow your heart.
+ After printing all your pages for both sides, you will need to cut them. I'm assuming you know how to do this and even got some practice from kindergarden. Though one important thing to notice, is that the program puts your images right in the middle of the page, so the first cut you will have to do is exactly there. Then you can trim the pages however you like, and again, follow your heart.
 
-Then and after just cutting your pages, you want to put them together of course, I'm no expert on crafts so we will be skipping that step, but personally I used some layers of cold glue on the spine if that helps you.
+Just after cutting your pages, you want to put them together of course, I'm no expert on crafts so we will be skipping that step, but personally I used some layers of cold glue on the spine if that helps you.
 
-Finally when you have your book all done, you can tell it's missing something really important, that is the cover. The one you should have removed from the printing and the one we will be using in the next section.
+Finally, when you have your book all done, you can tell it's missing something really important, that is the cover. The one you should have removed from the printing and the one we will be using in the next section.
 
 ### **Steps to create your cover**
