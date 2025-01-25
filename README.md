@@ -83,4 +83,51 @@ Just after cutting your pages, you want to put them together of course, I'm no e
 
 Finally, when you have your book all done, you can tell it's missing something really important, that is the cover. The one you should have removed from the printing and the one we will be using in the next section.
 
-    ### **Steps to create your cover**
+### **Steps to create your cover**
+1. Decide what you want to do: 
+- **First option:** create a cover yourself with a third party program like Photoshop. Probably the best option if you know how to do image editing.
+- **Second option:** if you already have a full-cover (front, back and spine) you can put it inside the program to resize it and get it ready to print. 
+- **Third option:** if you are missing any part of the full-cover, you can use this program to create the rest or all of them (really useful for mangas, because you can find a front-cover of your volume easily, and the program will handle the rest)
+2. If you are still reading I'd assume you didn't choose the first option and you want to use the program to create a cover, otherwise why are you still here? We will now go over the prompting for both cases:
+
+***Second option prompting***
+
+First things first, for this option you **must** have the three parts, the front, back and spine. You can have them in one single image or divided in three parts: 
+
+- For a single image that contains the whole cover you need to rename it "full_cover.png"
+
+If you have the 3 different parts separated you will need to rename them like this:
+- Front cover: named "cover.png"
+- Back cover: named "back.png"
+- Spine: named "spine.png"
+
+**IMPORTANT:** the ".png" part is relevant, the program won't convert them for you if it is in another format. No reason, just because I'm .png supremacist.
+
+After renaming, you would need to put everything inside the 'cover' folder, and then double click the 'script.exe' to get to the prompting:
+
+	1. Do you want to print a book (manga, comic, etc) or just a cover? (cover/book): 
+You will see this first, we want to create a cover this time, so type 'cover'.
+	
+	2. Choose the order in which you will be reading ('left to right' or 'right to left'): 
+Same as the book creation, the program wants to know this to arrange your cover images correctly. If you got just one page this does nothing.
+
+	3. Please choose paper size to print (A4, Letter, or A5): 
+To know what kind of paper you will be using for printing, make sure that the size of your book + spine is not greater than it's size, or you would need to use a bigger one. (eg. you printed your book with a width of 13cm and letter paper, that would make the full-cover 26 cm + spine, so you need to use a bigger paper like A4).
+
+	# If your 'input' folder is empty:
+	
+	4. Please enter the height of the cover in pixels for resize/generate: 
+	5. Please enter the width of the cover in pixels for resize/generate: 
+	
+	# If you have images inside your input folder:
+	
+	4. The program detected images in the input folder, do you want to use them to assign the size (height and width) of the cover? (y/n): 
+Here the program can detect if you got images inside the 'input' folder (the ones used to create your pdf book), and will ask you if you want your cover page to be the same size. If you don't, then you would need to know the size (width and height) in pixels of the images you used (the resized ones, not the originals) to create a cover that fits your book. 
+
+If you are missing any of the parts, you want to use the third option:
+
+***Third option prompting***
+
+If you are here, you are just as lazy as me and don't want to create your own cover page everytime or you just don't feel like searching it. Either way, I'm your friend and I'm here to help you create a *decent* cover in a matter of seconds. For reference here is how a cover would look like with just the program creation tool, no editing whatsoever:
+
+![cover_example](images/cover_example.png  "cover example")
