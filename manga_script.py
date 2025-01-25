@@ -1314,7 +1314,7 @@ def main():
 
     if choose_creation == "book":
         while True:     
-            delete_initial_pages = input("Delete ALL '000' pages? Usually the 000 pages are covers, artwork, fanmade, etc. (y/n): ").strip().lower()
+            delete_initial_pages = input("Delete all '000' pages? These are typically covers, artwork, or fan-made content (y/n): ").strip().lower()
             if delete_initial_pages == "y": 
                 delete_initial_pages = True
                 break

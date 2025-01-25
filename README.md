@@ -1,20 +1,23 @@
 # Manga Printing Tool
 
-Create a ready-to-print manga, book, or comic automatically from images.
+Automatically Create Ready-to-Print Manga, Books, or Comics from Images.
 ## What problem does it solve?
 
 
-For manga or book enthusiasts, printing their favorite titles can be a hassle. This tool simplifies the process with a straightforward approach: just place your files and double-click 'script.exe'. It handles almost everything, from splitting pages and resizing them to ensuring the print format is correct, so you don’t have to worry about the details. It also includes a basic cover creation tool, allowing you to quickly generate spines and back covers for your manga or books.
+For manga or book enthusiasts, printing their favorite titles can be a hassle. This tool simplifies the process with a straightforward approach: just place your files and double-click 'script.exe'. 
+
+It handles almost everything: splitting pages, resizing them, and ensuring the correct print format. You won’t have to worry about the details. It also includes a basic cover creation tool, allowing you to quickly generate spines and back covers for your manga or books.
 
 
 ## How to download?
 
-Go to to the [releases](https://github.com/Malagel/MangaPrintingTool/releases) tab and download the latest version. Unzip it and you are good to go.
-
+- Go to the [releases](https://github.com/Malagel/MangaPrintingTool/releases) tab.
+- Download the latest version.
+- Unzip it and you are good to go.
 
 ## How to use it?
 
-I'm assuming you already have downloaded the latest version and unzipped it somewhere, now you got many folders and a 'script.exe'. I'm going to explain the folders later in the "steps to create your cover", since they are mostly used there. Now, let's dive into how to create your book or manga:
+I'm assuming you already have downloaded the latest version and unzipped it somewhere, now you have many folders and a 'script.exe'. I'm going to explain the folders later in the "steps to create your cover", since they are primarily used for cover creation. Now, let's dive into how to create your book or manga:
 
 ### **Steps to create your manga or book**
 
@@ -22,7 +25,7 @@ I'm assuming you already have downloaded the latest version and unzipped it some
 
 2. After you get your files and copy it to another folder as a backup, you need to put them inside the 'input' folder of where you extracted the tool. You don't need to organize the pages yourself, the program will do it for you and if it finds a problem doing so it will tell you.
 
-3. Double click 'script.exe' and a command line tool will appear, where you will be prompted for many *things* that I'm going to cover (there is not that small chance that windows defender blocks the program, because it modifies images and renames them, so it can be mistaken as malware. If this happens to you press 'more information' and then 'execute'. Do not worry, it's safe).
+3. Double click 'script.exe' and a command line tool will appear, where you will be prompted for many *things* that I'm going to cover (there is a not so small chance that windows defender blocks the program, because it modifies and renames images, which can mistakenly flag it as malware. If this happens to you, click 'More Information' and then 'Run Anyway').
 
 -  ***Prompting***
 
@@ -36,7 +39,7 @@ Pretty self explanatory. The tool can create covers as well, but we will dive in
 
 This is the size of the final PDF, so essentially this is the size of the paper you got in your hands. If you use bigger/smaller paper than the one you have, you will waste a **ton** of ink, and probably destroy your printer, I don't know.
 
-    3. Delete ALL '000' pages? Usually the 000 pages are covers, artwork, fanmade, etc. (y/n):
+    3. Delete all '000' pages? These are typically covers, artwork, or fan-made content. (y/n):
 
 This is just a safety measure, and it's entirely optional. Generally, when you download manga it comes with the cover named like '000.png', and of course the cover goes on the cover, therefore you don't want it to mess with you and your dreams of printing millions of books. That's why it's recommended to check your files and remove those party poopers, but if you are lazy like me just type 'y' and *maybe* it gets removed from the book.
 
@@ -131,3 +134,4 @@ If you are missing any of the parts, you want to use the third option:
 If you are here, you are just as lazy as me and don't want to create your own cover page everytime or you just don't feel like searching it. Either way, I'm your friend and I'm here to help you create a *decent* cover in a matter of seconds. For reference here is how a cover would look like in a PDF with just the program creation tool, no editing whatsoever:
 
 ![cover_example](images/cover_example.png  "cover example")
+
