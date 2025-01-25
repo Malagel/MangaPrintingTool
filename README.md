@@ -101,7 +101,7 @@ If you have the 3 different parts separated you will need to rename them like th
 - Back cover: named "back.png"
 - Spine: named "spine.png"
 
-**IMPORTANT:** the ".png" part is relevant, the program won't convert them for you if it is in another format. No reason, just because I'm .png supremacist.
+**IMPORTANT:** the ".png" part is relevant, the program won't convert them for you if it is in another format. No reason at all, just because I'm a png supremacist.
 
 After renaming, you would need to put everything inside the 'cover' folder, and then double click the 'script.exe' to get to the prompting:
 
@@ -128,6 +128,6 @@ If you are missing any of the parts, you want to use the third option:
 
 ***Third option prompting***
 
-If you are here, you are just as lazy as me and don't want to create your own cover page everytime or you just don't feel like searching it. Either way, I'm your friend and I'm here to help you create a *decent* cover in a matter of seconds. For reference here is how a cover would look like with just the program creation tool, no editing whatsoever:
+If you are here, you are just as lazy as me and don't want to create your own cover page everytime or you just don't feel like searching it. Either way, I'm your friend and I'm here to help you create a *decent* cover in a matter of seconds. For reference here is how a cover would look like in a PDF with just the program creation tool, no editing whatsoever:
 
 ![cover_example](images/cover_example.png  "cover example")
