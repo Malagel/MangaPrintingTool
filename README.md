@@ -59,6 +59,10 @@ Also, if you exceed certain measurements, you won't be able to create a cover pa
 
 I can't tell you what to do though, follow your heart.
 
+    5. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
+
+This will appear after the program finishes creating your PDF, if you won't do anything else with the program, or you want to create another book type 'y', but if you want to create a cover you would want to type 'n', since the program could still use those images for generating one (like the amount of pages of your book or it's size).
+
 That would be it for the tool. It can take a while to process all the images, but you can see the progress of it. Finally it will give you a file called 'output.pdf' inside the 'output' folder. Each page of the PDF will contain 2 images from your book. Remember to check it like this:
 
 ![pages_order](images/pages_order.png  "How to check the order of your pages")
@@ -79,4 +83,4 @@ Just after cutting your pages, you want to put them together of course, I'm no e
 
 Finally, when you have your book all done, you can tell it's missing something really important, that is the cover. The one you should have removed from the printing and the one we will be using in the next section.
 
-### **Steps to create your cover**
+    ### **Steps to create your cover**
