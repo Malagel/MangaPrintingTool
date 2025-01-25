@@ -15,10 +15,10 @@ def cm_to_pixels(cm, dpi):
     return int(cm * dpi / 2.54)
 
 def pixels_to_points(pixels, dpi=300):
-    return (pixels / dpi) * 72 
+    return int((pixels / dpi) * 72)
 
 def points_to_pixels(points, dpi=300):
-    return points * (dpi / 72)
+    return int(points * (dpi / 72))
 
 def resize_image(img, target_width_cm, dpi=300):
     target_width_px = cm_to_pixels(target_width_cm, dpi)
@@ -1105,6 +1105,7 @@ def create_cover(paper_size, output_folder, pages_order):
     cover_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "cover.png"), None)
     spine_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "spine.png"), None)
     back_path = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "back.png"), None)
+    full_cover = next((os.path.join(cover_folder, f) for f in os.listdir(cover_folder) if f == "full_cover.png"), None)
 
     image_paths = detect_images_in_folder(folder_path="input")
     if image_paths: 
@@ -1118,35 +1119,47 @@ def create_cover(paper_size, output_folder, pages_order):
         else:
             while True:
                 target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ").strip()
-                if int(target_height_px) >= points_to_pixels(page_height):
+                if not target_height_px.isnumeric():
+                    print("Please enter a valid numeric value for the height.")
+                    continue
+                target_height_px = int(target_height_px)
+                if target_height_px >= points_to_pixels(page_height):
                     print("The height of the cover cannot be greater than the height of the paper.")
-                elif target_height_px.isnumeric():
-                    target_height_px = int(target_height_px)
+                else:
                     break
             while True:
                 target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ").strip()
-                if (target_height_px * 2.08) >= points_to_pixels(page_width):
+                if not target_width_px.isnumeric():
+                    print("Please enter a valid numeric value for the width.")
+                    continue
+                target_width_px = int(target_width_px)
+                if target_width_px * 2.08 >= points_to_pixels(page_width):
                     print("The width of the covers and spine cannot be greater than the width of the paper.")
-                elif target_width_px.isnumeric():
-                    target_width_px = int(target_width_px)
+                else:
                     break
     else:
         while True:
-                target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ").strip()
-                if int(target_height_px) >= points_to_pixels(page_height):
-                    print("The height of the cover cannot be greater than the height of the paper.")
-                elif target_height_px.isnumeric():
-                    target_height_px = int(target_height_px)
-                    break
+            target_height_px = input("Please enter the height of the cover in pixels for resize/generate: ").strip()
+            if not target_height_px.isnumeric():
+                print("Please enter a valid numeric value for the height.")
+                continue
+            target_height_px = int(target_height_px)
+            if target_height_px >= points_to_pixels(page_height):
+                print("The height of the cover cannot be greater than the height of the paper.")
+            else:
+                break
         while True:
-                target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ").strip()
-                if (target_height_px * 2.08) >= points_to_pixels(page_width):
-                    print("The width of the covers and spine cannot be greater than the width of the paper.")
-                elif target_width_px.isnumeric():
-                    target_width_px = int(target_width_px)
-                    break
+            target_width_px = input("Please enter the width of the cover in pixels for resize/generate: ").strip()
+            if not target_width_px.isnumeric():
+                print("Please enter a valid numeric value for the width.")
+                continue
+            target_width_px = int(target_width_px)
+            if target_width_px * 2.08 >= points_to_pixels(page_width):
+                print("The width of the covers and spine cannot be greater than the width of the paper.")
+            else:
+                break
     while True:
-        if not cover_path or not spine_path or not back_path:
+        if (not cover_path or not spine_path or not back_path) and not full_cover:
             personalized_creation = input("You are missing images to create a full-cover. Do you want to create the missing ones? (y/n): ").strip().lower()
             if personalized_creation in ["y", "n"]:
                 break
