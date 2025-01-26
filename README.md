@@ -136,5 +136,6 @@ If you are here, you are just as lazy as me and don't want to create your own co
 ![cover_example](images/cover_example.png  "cover example")
 
 This was entirely created with just prompts and some images you provide to the program (completely optional), here is a list of what you would need to have to get the best results possible:
-- **Cover page:** more specifically a front-cover, that will be used to get colors for the missing back and spine (if you don't provide them) and will make the full-cover look a lot better. Needs to be named: "cover.png"
-- 
+- **Cover page:** more specifically a front-cover, that will be used to get colors for the missing back and spine (if you don't provide them) and will make the full-cover look a lot better. Must be named: "cover.png"
+- **Image for the spine**: it could be a character image or whatever you want. It will be placed in the spine. Must be named "spine_image.png".
+- **Title image**: this is an image that will be used in case you don't have a front-cover, and will be used in the back-cover. It can be whatever but I recommend a title. Must be named "title.png"
