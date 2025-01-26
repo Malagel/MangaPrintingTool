@@ -210,8 +210,9 @@ def organize_image_paths(image_paths, delete_initial_pages):
 
             if '000' in basename or '0000' in basename:
                 shutil.move(image_path, cover_destination)
+                print("Magic happened in your 'cover' folder...")
                 break
-                
+
         image_paths = [img for img in image_paths if '000' not in os.path.basename(img) and '0000' not in os.path.basename(img)]
 
     all_digits = all(os.path.splitext(os.path.basename(image))[0].isdigit() for image in image_paths)
