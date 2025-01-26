@@ -4,6 +4,7 @@ import zipfile
 import fitz
 import random
 import textwrap
+import shutil
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, A5, letter, landscape
@@ -95,7 +96,7 @@ def extract_file(file, output_folder):
     with zipfile.ZipFile(file, 'r') as zip_ref:
         zip_ref.extractall(output_folder)
 
-def cut_double_page(image_path, manga_width, check):
+def cut_double_page(image_path, manga_width, check, pages_order):
     with Image.open(image_path) as img:
         img_width, img_height = img.size
         
@@ -105,7 +106,10 @@ def cut_double_page(image_path, manga_width, check):
             left_page = img.crop((0, 0, middle, img_height))
             right_page = img.crop((middle, 0, img_width, img_height))
 
-            return left_page, right_page
+            if pages_order == 'right':
+                return left_page, right_page
+            else:
+                return right_page, left_page
         
         if not check and img_width > manga_width * 1.3: # 30% margin of error
             middle = img_width // 2
@@ -113,7 +117,10 @@ def cut_double_page(image_path, manga_width, check):
             left_page = img.crop((0, 0, middle, img_height))
             right_page = img.crop((middle, 0, img_width, img_height))
 
-            return right_page, left_page
+            if pages_order == 'right':
+                return left_page, right_page
+            else:
+                return right_page, left_page
         else:
             return None, None
 
@@ -219,7 +226,7 @@ def organize_image_paths(image_paths, delete_initial_pages):
             
     return image_paths
 
-def resize_and_save_images(image_paths, target_width_cm, input_folder):
+def resize_and_save_images(image_paths, target_width_cm, input_folder, pages_order):
 
     check = check_if_all_pages_are_double(image_paths)
 
@@ -233,7 +240,7 @@ def resize_and_save_images(image_paths, target_width_cm, input_folder):
 
         print(f"Processing image number {counter}...", end="\r")
         try:
-            left_page, right_page = cut_double_page(image_path, manga_width, check) 
+            left_page, right_page = cut_double_page(image_path, manga_width, check, pages_order) 
 
             if left_page and right_page:
                 left_page_resized = resize_image(left_page, target_width_cm, dpi=300)
@@ -270,7 +277,7 @@ def resize_and_save_images(image_paths, target_width_cm, input_folder):
     
     return new_image_paths, double_page_paths, check
 
-def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
+def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages, pages_order):
     cbz_files = [f for f in os.listdir(input_folder) if f.endswith('.cbz')]
     zip_files = [f for f in os.listdir(input_folder) if f.endswith('.zip')]
     
@@ -304,7 +311,7 @@ def scan_and_sort_images(input_folder, target_width_cm, delete_initial_pages):
 
     image_paths = organize_image_paths(image_paths, delete_initial_pages)
 
-    image_paths, double_page_paths, check = resize_and_save_images(image_paths, target_width_cm, input_folder)
+    image_paths, double_page_paths, check = resize_and_save_images(image_paths, target_width_cm, input_folder, pages_order)
 
     return image_paths, double_page_paths, check
 
@@ -1349,19 +1356,26 @@ def main():
                 print("Invalid input. Please enter a number or 'full'.")
     try:
         if choose_creation == "book":
-            images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages)
+            images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages, pages_order)
             create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check)
 
             print(f"\nPDF saved in: {output_folder}\n")
             goodbye_message()
 
-            while True:   
+            while True:
                 check = input("\nDo you want to delete everything in the input folder? Useful if you want to print again or change something (y/n): ").strip().lower()
                 if check in ["y", "n"]:
                     if check == "y":
                         for file in os.listdir(input_folder):
+                            if file.endswith(('.pdf', '.cbz', '.zip')):
+                                continue
+
                             file_path = os.path.join(input_folder, file)
-                            os.remove(file_path)
+                            if os.path.isfile(file_path):
+                                os.remove(file_path)
+                            elif os.path.isdir(file_path):
+                                shutil.rmtree(file_path)
+
                         print("--- All files in the input folder have been deleted. ---")
                     break
         else:
