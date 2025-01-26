@@ -135,3 +135,6 @@ If you are here, you are just as lazy as me and don't want to create your own co
 
 ![cover_example](images/cover_example.png  "cover example")
 
+This was entirely created with just prompts and some images you provide to the program (completely optional), here is a list of what you would need to have to get the best results possible:
+- **Cover page:** more specifically a front-cover, that will be used to get colors for the missing back and spine (if you don't provide them) and will make the full-cover look a lot better. Needs to be named: "cover.png"
+- 
