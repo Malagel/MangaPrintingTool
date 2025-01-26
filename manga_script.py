@@ -1002,7 +1002,7 @@ def generate_full_cover(total_pages, volume_number, name, author, back_color, sp
     
     create_cover_pdf(page_height, page_width, pages_order)
 
-def personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order, target_width_px):
+def personalized_cover_creation(target_height_px, paper_size, image_paths, pages_order, target_width_px):
     if image_paths:
         while True:
             total_pages = len(image_paths)
@@ -1190,7 +1190,7 @@ def create_cover(paper_size, output_folder, pages_order):
 
         input("\nPress Enter to continue...\n")
 
-        personalized_cover_creation(page_height, page_width, target_height_px, paper_size, image_paths, pages_order, target_width_px)
+        personalized_cover_creation(target_height_px, paper_size, image_paths, pages_order, target_width_px)
         return
 
     # Create the cover from one or three images
