@@ -115,14 +115,14 @@ You will see this first, we want to create a cover this time, so type 'cover'.
 Same as the book creation, the program wants to know this to arrange your cover images correctly. If you got just one page this does nothing.
 
 	3. Please choose paper size to print (A4, Letter, or A5): 
-To know what kind of paper you will be using for printing, make sure that the size of your book + spine is not greater than it's size, or you would need to use a bigger one. (eg. you printed your book with a width of 13cm and letter paper, that would make the full-cover 26 cm + spine, so you need to use a bigger paper like A4).
+To know what kind of paper you will be using for printing, make sure that the size of your book + spine is not greater than it's size, or you would need to use a bigger one. (eg. you printed your book with a width of 13cm and letter paper, that would make the full-cover 26 cm + spine, so you need to use a bigger paper, like A4).
 
 	# If your 'input' folder is empty:
 	
 	4. Please enter the height of the cover in pixels for resize/generate: 
 	5. Please enter the width of the cover in pixels for resize/generate: 
 	
-	# If you have images inside your input folder:
+	# If you have images inside your 'input' folder:
 	
 	4. The program detected images in the input folder, do you want to use them to assign the size (height and width) of the cover? (y/n): 
 Here the program can detect if you got images inside the 'input' folder (the ones used to create your pdf book), and will ask you if you want your cover page to be the same size. If you don't, then you would need to know the size (width and height) in pixels of the images you used (the resized ones, not the originals) to create a cover that fits your book. 
@@ -138,4 +138,71 @@ If you are here, you are just as lazy as me and don't want to create your own co
 This was entirely created with just prompts and some images you provide to the program (completely optional), here is a list of what you would need to have to get the best results possible:
 - **Cover page:** more specifically a front-cover, that will be used to get colors for the missing back and spine (if you don't provide them) and will make the full-cover look a lot better. Must be named: "cover.png"
 - **Image for the spine**: it could be a character image or whatever you want. It will be placed in the spine. Must be named "spine_image.png".
-- **Title image**: this is an image that will be used in case you don't have a front-cover, and will be used in the back-cover. It can be whatever but I recommend a title. Must be named "title.png"
+- **Title image**: this is an image that will be used in case you don't have a front-cover, and will be used in the back-cover. It can be whatever but I recommend a title. Must be named "title.png".
+- **Editorial Image**: at the bottom of the spine you can add an editorial image. Must be named "editorial.png".
+- **Font**: there is an included font, but you can change it inside the 'assets' folder. Must be named "custom_font.ttf".
+
+Everything here but the font needs to renamed and placed inside the 'cover' folder. Another thing to note is that you can have a spine or a back and still add them, the program will generate just the missing ones (they must be named "spine.png" or "back.png").
+
+Just after collecting everything you want to add, double click 'script.exe':
+
+	1. Do you want to print a book (manga, comic, etc) or just a cover? (cover/book): 
+We want a cover, so type 'cover'.
+
+	2. Choose the order in which you will be reading ('left to right' or 'right to left'): 
+Same as before, the program needs to know this to reverse or not the images.
+
+	3. Please choose paper size to print (A4, Letter, or A5): 
+To know what kind of paper you will be using for printing, make sure that the size of your book + spine is not greater than it's size, or you would need to use a bigger one. (eg. you printed your book with a width of 13cm and letter paper, that would make the full-cover 26 cm + spine, so you need to use a bigger paper, like A4).
+
+	# If your 'input' folder is empty:
+	
+	4. Please enter the height of the cover in pixels for resize/generate: 
+	5. Please enter the width of the cover in pixels for resize/generate: 
+	
+	# If you have images inside your 'input' folder:
+	
+	4. The program detected images in the input folder, do you want to use them to assign the size (height and width) of the cover? (y/n): 
+Here the program can detect if you got images inside the 'input' folder (the ones used to create your pdf book), and will ask you if you want your cover page to be the same size. If you don't, then you would need to know the size (width and height) in pixels of the images you used (the resized ones, not the originals) to create a cover that fits your book. 
+
+	5. You are missing images to create a full-cover. Do you want to create the missing ones? (y/n): 
+This prompt will only appear when you are missing images (front, back or spine). Since you want to generate a missing part, we type 'y'.
+
+	# If your 'input' folder is empty:
+
+	6. Please enter the total number of pages, or an approximate number: 
+
+	# If you have images inside your input folder:
+
+	6. The program detected X pages in the input folder, do you want to use them to assign the number of pages? (y/n): 
+Just like before, the program will help you if you already have images from a past book. The amount of pages is important because it will determine the width of the spine.
+
+	7. Please enter the paper thickness in mm you will be using, or enter 'default' for an average paper thickness of 0.05: 
+Here you will need to know how thick is the paper, I would recommend just typing 'default', unless your paper is a weirdo who cannot adapt to the canons of the paper society.
+
+	8. Please enter the volume number of the manga, if it's a book use '0':
+If the cover you want to create is for a manga, you would want to use a volume number, if you type '0' it won't have a number at all in the spine.
+
+	9. Please enter the name of the manga or book for displaying (looks better with all caps for mangas and certain fonts): 
+In my experience it looks better with all caps, but depends on the font you'll be using. As always, follow your heart.
+
+	10. Please enter the author of the manga or book for displaying: 
+This one doesn't look that good with all caps. Just saying.
+
+	11. Please enter the description of the manga or book for displaying, or enter 'skip' for no description: 
+You can type whatever you want here, this will be displayed on the back. You can avoid it at all by just typing 'skip'.
+
+	12. Please enter the hex code of the front-cover color (eg. #000000), or 'default' to let the program choose.
+	13. Please enter the hex code of the back-cover color (eg. #000000), or 'default' to let the program choose:  
+	# And so on...
+You will be prompted to give a color to the front, back, spine and font. It uses hex codes that you can choose in pages like 
+[this](https://htmlcolorcodes.com/). You can also let the program choose what's best by typing 'default'.
+
+	16. Do you want to add a QR code of this tool on the back? It will look at least OK, I promise. You can also rename de qr.png with your own image... (y/n):
+This is just a QR image that is linked to this page, so it's kind of an optional ad. It looks good though.
+
+You will now have a PDF called "cover.pdf" inside the 'output' folder. You will also have the resized parts inside the 'cover' folder, so if you want to change something of them you can alter those instead of creating your own.
+
+
+
+	
