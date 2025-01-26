@@ -1216,7 +1216,8 @@ def create_cover(paper_size, output_folder, pages_order):
     if not cover_paths:
         print("No cover image found. Exiting cover creation.")
         return
-    if len(cover_paths) == 1:
+    
+    if full_cover and len(cover_paths) == 1:
         print("Resizing cover")
         with Image.open(cover_paths[0]) as img:
             img_width, img_height = img.size
