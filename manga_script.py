@@ -201,7 +201,18 @@ def organize_image_paths(image_paths, delete_initial_pages):
     digits_regex = re.compile(r"(\d{3,4})")
 
     if delete_initial_pages:
-        image_paths = [image for image in image_paths if '000' not in os.path.basename(image) and '0000' not in os.path.basename(image)] 
+        cover_folder = 'cover'
+        os.makedirs(cover_folder, exist_ok=True)
+        cover_destination = os.path.join(cover_folder, 'is_this_your_cover.png')
+        
+        for image_path in image_paths:
+            basename = os.path.basename(image_path)
+
+            if '000' in basename or '0000' in basename:
+                shutil.move(image_path, cover_destination)
+                break
+                
+        image_paths = [img for img in image_paths if '000' not in os.path.basename(img) and '0000' not in os.path.basename(img)]
 
     all_digits = all(os.path.splitext(os.path.basename(image))[0].isdigit() for image in image_paths)
                             
