@@ -188,7 +188,7 @@ def pdf_to_png(pdf_path, output_folder, dpi=300):
 
         pix = page.get_pixmap(dpi=dpi)
 
-        output_file = os.path.join(output_folder, f'pdf_image_p{str(page_num + 1).zfill(3)}.png')
+        output_file = os.path.join(output_folder, f'pdf_image_p{str(page_num).zfill(3)}.png')
         pix.save(output_file)
         
     pdf_document.close()
