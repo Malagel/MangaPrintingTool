@@ -17,13 +17,13 @@ It handles almost everything: splitting pages, resizing them, and ensuring the c
 
 ## How to use it?
 
-I'm assuming you already have downloaded the latest version and unzipped it somewhere, now you have many folders and a 'script.exe'. I'm going to explain the folders later in the "steps to create your cover", since they are primarily used for cover creation. Now, let's dive into how to create your book or manga:
+I'm assuming you already have downloaded the latest version and unzipped it somewhere, now you have many folders and a 'script.exe'.Let's dive into how to create your book or manga:
 
 ### **Steps to create your manga or book**
 
 1. You will first need to gather the pages, they need to be in '.jpg' or 'png' format, also they can be inside a '.cbz' or '.zip' or even a '.pdf', the program will extract it for you. You **need** and I repeat, you **NEED** to have a backup of your files, since they **will get modified** in the process and you won't be able to recover their original state.
 
-2. After you get your files and copy it to another folder as a backup, you need to put them inside the 'input' folder of where you extracted the tool. You don't need to organize the pages yourself, the program will do it for you and if it finds a problem doing so it will tell you.
+2. After you get your files and copy it to another folder as a backup, you need to put them inside the 'input' folder of where you extracted the tool.
 
 3. Double click 'script.exe' and a command line tool will appear, where you will be prompted for many *things* that I'm going to cover (there is a not so small chance that windows defender blocks the program, because it modifies and renames images, which can mistakenly flag it as malware. If this happens to you, click 'More Information' and then 'Run Anyway').
 
@@ -32,16 +32,13 @@ I'm assuming you already have downloaded the latest version and unzipped it some
 Now I will explain the prompting part, basically where the program asks you *things*. The expected answers are inside the parenthesis, anything outside them will be rejected and you will be prompted again:
 
     1. Do you want to print a book (manga, comic, etc) or just a cover? (cover/book):
-
 Pretty self explanatory. The tool can create covers as well, but we will dive into that later.
 
     2. Please choose paper size to print (A4, Letter, or A5):
-
 This is the size of the final PDF, so essentially this is the size of the paper you got in your hands. If you use bigger/smaller paper than the one you have, you will waste a **ton** of ink, and probably destroy your printer, I don't know.
 
     3. Delete all '000' pages? These are typically covers, artwork, or fan-made content. (y/n):
-
-This is just a safety measure, and it's entirely optional. Generally, when you download manga it comes with the cover named like '000.png', and of course the cover goes on the cover, therefore you don't want it to mess with you and your dreams of printing millions of books. That's why it's recommended to check your files and remove those party poopers, but if you are lazy like me just type 'y' and *maybe* it gets removed from the book.
+This is just a safety measure, and it's entirely optional. Generally, when you download manga it comes with the cover named like '000.png', and of course the cover goes on the cover, therefore you don't want it to mess with you and your dreams. That's why it's recommended to check your files and remove those party poopers, but if you are lazy like me just type 'y' and *maybe* it gets removed from the book. If you are using a pdf, it will just remove the first page (usually the cover).
 
  
     4. Please choose the width of the manga/book you want in centimeters (eg: 12.5) or type 'full' to cover the whole page:
