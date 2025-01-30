@@ -890,7 +890,10 @@ def generate_just_back_cover(cover_path, name, author, back_color, title_path, d
                 
                 title_image = title_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-                x_pos = int(target_width_px - new_width / 2 - author_text_width / 2 - padding)
+                if author_text_width < new_width:
+                    x_pos = int(target_width_px - new_width - padding)
+                else:
+                    x_pos = int(target_width_px - new_width / 2 - author_text_width / 2 - padding)
                 y_pos = int(target_height_px * 0.87)
 
                 back_page.paste(title_image, (x_pos, y_pos), title_image)
