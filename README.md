@@ -1,6 +1,6 @@
 # Manga Printing Tool
 
-Automatically Create Ready-to-Print Manga, Books, or Comics from Images.
+Automatically Create Ready-to-Print Manga, Books, or Comics with it's covers only using easy prompts.
 ## What problem does it solve?
 
 
@@ -38,14 +38,14 @@ Pretty self explanatory. The tool can create covers as well, but we will dive in
 This is the size of the final PDF, so essentially this is the size of the paper you got in your hands. If you use bigger/smaller paper than the one you have, you will waste a **ton** of ink, and probably destroy your printer, I don't know.
 
     3. Delete all '000' pages? These are typically covers, artwork, or fan-made content. (y/n):
-This is just a safety measure, and it's entirely optional. Generally, when you download manga it comes with the cover named like '000.png', and of course the cover goes on the cover, therefore you don't want it to mess with you and your dreams. That's why it's recommended to check your files and remove those party poopers, but if you are lazy like me just type 'y' and *maybe* it gets removed from the book. If you are using a pdf, it will just remove the first page (usually the cover).
+This is just a safety measure, and it's entirely optional. Generally, when you download manga it comes with the cover named like '000.png', and of course the cover goes on the cover, therefore you don't want it to mess with you and your dreams. That's why it's recommended to check your files and remove those party poopers, but if you are lazy like me just type 'y' and *maybe* it gets removed from the book.
+
+If you are using a PDF, it will just remove the first page (usually the cover).
  
     4. Please choose the width of the manga/book you want in centimeters (eg: 12.5) or type 'full' to cover the whole page:
 The number you have to type here is **just the width of the book** you want to create. So if you want a book of 12.5 centimeters wide, type '12.5', which is the size of most manga . This is important, because your files will get resized to match this measurement and then pasted into a PDF in pairs, so one page on the right, one on the left.
 
-If you've been following, you could be asking yourself "when does this end?", or maybe something more deep like "if two images will be pasted into one page, I can just divide the size of my paper by 2 and type that width!" For the first question I have no answer, but for the latter I do: you cannot do that, because the program takes into account margins, so it establishes a maximum width for each type of paper.
-
-Also, if you exceed certain measurements, you won't be able to create a cover page later on, since you just won't have more space in the paper. Here are my personal recommendations if you want a bigger book:
+The program takes into account some margins for printing, so it will limit the size you choose depending on your paper, no big book for you. Also, if you exceed certain measurements, you won't be able to create a cover page later on, since you just won't have more space in the paper. Here are my personal recommendations if you want a bigger book:
 
 - A4: 13.5 cm.
 - Letter: 13 cm.
@@ -54,7 +54,7 @@ Also, if you exceed certain measurements, you won't be able to create a cover pa
 I can't tell you what to do though, follow your heart.
 
     5. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
-This will appear after the program finishes creating your PDF, if you won't do anything else with the program, or you want to create another book type 'y', but if you want to create a cover you would want to type 'n', since the program could still use those images for generating one (like the amount of pages of your book or it's size).
+This will appear after the program finishes creating your PDF, if you won't do anything else with the program, or you want to create another book type 'y', but if you want to create a cover you would want to type 'n', since the program could still use those images to get some data (like the amount of pages of your book or it's size).
 
 That would be it for the tool. It can take a while to process all the images, but you can see the progress of it. Finally it will give you a file called 'output.pdf' inside the 'output' folder. Each page of the PDF will contain 2 images from your book. Remember to check it like this:
 
