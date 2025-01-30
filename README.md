@@ -132,7 +132,7 @@ This was entirely created with just prompts and some images you provide to the p
 - **Editorial Image**: at the bottom of the spine you can add an editorial image. Must be named "editorial.png".
 - **Font**: there is an included font, but you can change it inside the 'assets' folder. Must be named "custom_font.ttf".
 
-Everything here but the font needs to renamed and placed inside the 'cover' folder. Another thing to note is that you can have a spine or a back and still add them, the program will generate just the missing ones (they must be named "spine.png" or "back.png").
+Everything here but the font needs to be renamed and placed inside the 'cover' folder. Another thing to note is that you can have a spine or a back and still add them, the program will generate just the missing ones (they must be named "spine.png" or "back.png").
 
 Just after collecting everything you want to add, double click 'script.exe':
 
@@ -140,7 +140,7 @@ Just after collecting everything you want to add, double click 'script.exe':
 We want a cover, so type 'cover'.
 
 	2. Choose the order in which you will be reading ('left to right' or 'right to left'): 
-Same as before, the program needs to know this to reverse or not the images.
+Same as before, the program needs to know this to reverse or not the final images.
 
 	3. Please choose paper size to print (A4, Letter, or A5): 
 To know what kind of paper you will be using for printing, make sure that the size of your book + spine is not greater than it's size, or you would need to use a bigger one. (eg. you printed your book with a width of 13cm and letter paper, that would make the full-cover 26 cm + spine, so you need to use a bigger paper, like A4).
