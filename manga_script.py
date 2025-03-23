@@ -379,7 +379,7 @@ def organize_printing_paths(image_paths, pages_order):
 
         return new_image_paths
 
-def draw_pdf(image_paths, output_folder, paper_size):
+def draw_pdf(image_paths, output_folder, paper_size, gutter):
 
     paper_size_mapping = {
     "A4": A4,
@@ -406,9 +406,9 @@ def draw_pdf(image_paths, output_folder, paper_size):
             center_line_x = page_height / 2
 
             if i % 2 == 0:
-                x_pos = center_line_x - img_width
+                x_pos = center_line_x - img_width - gutter
             else:
-                x_pos = center_line_x
+                x_pos = center_line_x + gutter
             
             y_pos = (page_width - img_height) / 2
 
@@ -419,7 +419,7 @@ def draw_pdf(image_paths, output_folder, paper_size):
 
     pdf.save()
 
-def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_paths, check):
+def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_paths, check, gutter):
 
     print("Validating printing order...")
     image_paths = validate_printing_order(image_paths, double_page_paths, check)
@@ -433,7 +433,7 @@ def create_pdf(image_paths, output_folder, paper_size, pages_order, double_page_
     image_paths = organize_printing_paths(image_paths, pages_order)
     # print(f"Final order of paths: {image_paths}")
 
-    draw_pdf(image_paths, output_folder, paper_size)
+    draw_pdf(image_paths, output_folder, paper_size, gutter)
 
 
 # Book pages order validation
@@ -1370,10 +1370,22 @@ def main():
                     break  # Valid input within range
             except ValueError:
                 print("Invalid input. Please enter a number or 'full'.")
+        while True:
+            gutter = input("Please enter the gutter (space between pages) in cm, or leave it blank for 0: ").strip()
+            if gutter == "":
+                gutter = 0
+                break
+            try:
+                gutter = float(gutter) / 2
+                gutter = cm_to_pixels(gutter, dpi=300)
+                gutter = pixels_to_points(gutter)
+                break
+            except ValueError:
+                print("Invalid input. Please enter a number.")
     try:
         if choose_creation == "book":
             images_paths, double_page_paths, check = scan_and_sort_images(input_folder, manga_size, delete_initial_pages, pages_order)
-            create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check)
+            create_pdf(images_paths, output_folder, paper_size, pages_order, double_page_paths, check, gutter)
 
             print(f"\nPDF saved in: {output_folder}\n")
             goodbye_message()
