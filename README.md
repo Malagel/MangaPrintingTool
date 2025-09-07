@@ -31,7 +31,7 @@ I'm assuming you already have downloaded the latest version and unzipped it some
 
 Now I will explain the prompting part, basically where the program asks you *things*. The expected answers are inside the parenthesis, anything outside them will be rejected and you will be prompted again:
 
-    1. Do you want to print a book (manga, comic, etc) or just a cover? (cover/book):
+    1. Do you want to print a book (could be manga, comic, etc) or just a cover? (cover/book):
 Pretty self explanatory. The tool can create covers as well, but we will dive into that later.
 
     2. Please choose paper size to print (A4, Letter, or A5):
@@ -53,7 +53,7 @@ The program takes into account some margins for printing, so it will limit the s
 
 I can't tell you what to do though, follow your heart.
 
-    5. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
+    6. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
 This will appear after the program finishes creating your PDF, if you won't do anything else with the program, or you want to create another book type 'y', but if you want to create a cover you would want to type 'n', since the program could still use those images to get some data (like the amount of pages of your book or it's size).
 
 That would be it for the tool. It can take a while to process all the images, but you can see the progress of it. Finally it will give you a file called 'output.pdf' inside the 'output' folder. Each page of the PDF will contain 2 images from your book. Remember to check it like this:
