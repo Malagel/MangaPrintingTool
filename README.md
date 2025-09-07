@@ -53,7 +53,7 @@ The program takes into account some margins for printing, so it will limit the s
 
 I can't tell you what to do though, follow your heart.
 
-    6. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
+    5. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
 This will appear after the program finishes creating your PDF, if you won't do anything else with the program, or you want to create another book type 'y', but if you want to create a cover you would want to type 'n', since the program could still use those images to get some data (like the amount of pages of your book or it's size).
 
 That would be it for the tool. It can take a while to process all the images, but you can see the progress of it. Finally it will give you a file called 'output.pdf' inside the 'output' folder. Each page of the PDF will contain 2 images from your book. Remember to check it like this:
