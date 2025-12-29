@@ -1312,7 +1312,11 @@ def main():
     output_folder = "output"
 
     while True:
-        choose_creation = input("Do you want to print a book (manga, comic, etc) or just a cover? (cover/book): ").strip().lower()
+        choose_creation = input("Do you want to print a book (e.g.: manga, comic, etc.) or just a cover? (cover/book): ").strip().lower()
+        if choose_creation in ["manga", "comic"]:
+            choose_creation = "book"
+            break
+        
         if choose_creation in ["cover", "book"]:
             break
     
