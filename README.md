@@ -42,7 +42,7 @@ This is just a safety measure, and it's entirely optional. Generally, when you d
 
 If you are using a PDF, it will just remove the first page (usually the cover).
  
-    4. Please choose the width of the manga/book you want in centimeters (eg: 12.5) or type 'full' to cover the whole page:
+	4. Please choose the width of the manga/book you want in centimeters (eg: 12.5) or type 'full' to cover the whole page:
 The number you have to type here is **just the width of the book** you want to create. So if you want a book of 12.5 centimeters wide, type '12.5', which is the size of most manga . This is important, because your files will get resized to match this measurement and then pasted into a PDF in pairs, so one page on the right, one on the left.
 
 The program takes into account some margins for printing, so it will limit the size you choose depending on your paper, no big book for you. Also, if you exceed certain measurements, you won't be able to create a cover page later on, since you just won't have more space in the paper. Here are my personal recommendations if you want a bigger book:
@@ -53,7 +53,12 @@ The program takes into account some margins for printing, so it will limit the s
 
 I can't tell you what to do though, follow your heart.
 
-    5. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
+	5. "Please enter the gutter (space between pages) in cm, or leave it blank for 0:
+Also self explanatory. If you want a gutter, which is a space between the two images (since every page has 2 images inside), just input a number. 
+
+This is useful because sometimes the spine of the book "eats" part of the contents in the middle of the pages. A gutter can solve this issue. 
+
+    6. Do you want to delete everything in the input folder? Useful if you want to print again or change something (y/n):
 This will appear after the program finishes creating your PDF, if you won't do anything else with the program, or you want to create another book type 'y', but if you want to create a cover you would want to type 'n', since the program could still use those images to get some data (like the amount of pages of your book or it's size).
 
 That would be it for the tool. It can take a while to process all the images, but you can see the progress of it. Finally it will give you a file called 'output.pdf' inside the 'output' folder. Each page of the PDF will contain 2 images from your book. Remember to check it like this:
